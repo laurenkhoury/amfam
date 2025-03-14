@@ -1,0 +1,552 @@
+---
+title: "time series"
+output: html_document
+date: "2024-10-31"
+---
+
+```{r setup, include=FALSE}
+library(httr)
+library(readxl)
+library(knitr)
+library(tidyverse)
+library(janitor)
+library(psych)
+library(dplyr)
+library(janitor)
+library(ggthemes)
+library(ggplot2)
+library(corrplot)
+library(tidyr)
+library(maps)
+library(scales)
+library(plotly)
+library(gganimate)
+library(broom)
+library(Matrix)
+library(lme4)
+library(viridis)
+library(transformr)
+```
+
+
+
+```{r}
+t_2007 <- read.csv(gzfile("StormEvents_details-ftp_v1.0_d2007_c20240216.csv.gz")) %>% janitor::clean_names()
+t_2008 <- read.csv(gzfile("StormEvents_details-ftp_v1.0_d2008_c20240620.csv.gz")) %>% janitor::clean_names()
+t_2009 <- read.csv(gzfile("StormEvents_details-ftp_v1.0_d2009_c20231116.csv.gz")) %>% janitor::clean_names()
+t_2010 <- read.csv(gzfile("StormEvents_details-ftp_v1.0_d2010_c20220425.csv.gz")) %>% janitor::clean_names()
+t_2011 <- read.csv(gzfile("StormEvents_details-ftp_v1.0_d2011_c20230417.csv.gz")) %>% janitor::clean_names()
+t_2012 <- read.csv(gzfile("StormEvents_details-ftp_v1.0_d2012_c20221216.csv.gz")) %>% janitor::clean_names()
+t_2013 <- read.csv(gzfile("StormEvents_details-ftp_v1.0_d2013_c20230118.csv.gz")) %>% janitor::clean_names() 
+t_2014 <- read.csv(gzfile("StormEvents_details-ftp_v1.0_d2014_c20231116.csv.gz")) %>% janitor::clean_names()
+t_2015 <- read.csv(gzfile("StormEvents_details-ftp_v1.0_d2015_c20240716.csv.gz")) %>% janitor::clean_names()
+t_2016 <- read.csv(gzfile("StormEvents_details-ftp_v1.0_d2016_c20220719.csv.gz")) %>% janitor::clean_names()
+t_2017 <- read.csv(gzfile("StormEvents_details-ftp_v1.0_d2017_c20230317.csv.gz")) %>% janitor::clean_names()
+t_2018 <- read.csv(gzfile("StormEvents_details-ftp_v1.0_d2018_c20240716.csv.gz")) %>% janitor::clean_names()
+t_2019 <- read.csv(gzfile("StormEvents_details-ftp_v1.0_d2019_c20240117.csv.gz")) %>% janitor::clean_names()
+t_2020 <- read.csv(gzfile("StormEvents_details-ftp_v1.0_d2020_c20240620.csv.gz")) %>% janitor::clean_names()
+t_2021 <- read.csv(gzfile("StormEvents_details-ftp_v1.0_d2021_c20240716.csv.gz")) %>% janitor::clean_names()
+```
+
+```{r}
+states_to_remove <- c("AMERICAN SAMOA", "ATLANTIC NORTH", "ATLANTIC SOUTH", "DISTRICT OF COLUMBIA", "d.c.", "E PACIFIC", "GULF OF ALASKA", "GULF OF MEXICO", "GUAM", "HAWAII WATERS", "LAKE ERIE", "LAKE HURON", "LAKE MICHIGAN", "LAKE ONTARIO", "LAKE ST CLAIR", "LAKE SUPERIOR", "PUERTO RICO", "ST LAWRENCE R", "VIRGIN ISLANDS", " ", "Kentucky", "")
+
+years <- 2007:2021
+
+for (year in years) {
+  df_name <- paste0("t_", year)
+  
+
+  if (exists(df_name)) {
+    assign(df_name, get(df_name)[!get(df_name)$state %in% states_to_remove, ])
+  } else {
+    cat(paste("Data frame", df_name, "does not exist.\n"))}}
+```
+
+```{r}
+
+generate_state_freq <- function(data, year) {
+  state_freq <- as.data.frame(table(data$state))
+  colnames(state_freq) <- c("value", paste0("freq_", year))
+  print(state_freq)
+  return(state_freq)
+}
+
+
+statefreq_list <- lapply(2007:2021, function(year) {
+  data <- get(paste0("t_", year))
+  generate_state_freq(data, year)
+})
+
+
+names(statefreq_list) <- paste0("statefreq_", 2007:2021)
+
+
+for (year in 2007:2021) {
+  assign(paste0("statefreq_", year), generate_state_freq(get(paste0("t_", year)), year))
+}
+
+```
+
+
+
+
+```{r}
+freq_state <- lapply(years, function(year) {
+  temps_storm <- paste0("statefreq_", year)
+  if (exists(temps_storm)) {
+    temp_df <- get(temps_storm)
+    
+    colnames(temp_df) <- c("state", paste0("freq_", year))
+    return(temp_df)
+  } else {
+    cat(paste("Data frame", temps_storm, "does not exist. Skipping.\n"))
+    return(NULL)}})
+
+freq_state <- Filter(Negate(is.null), freq_state)
+
+
+state_freq <- Reduce(function(x, y) merge(x, y, by = "state", all = TRUE), freq_state)
+
+state_freq
+```
+
+
+```{r}
+state_freq_long <- state_freq %>%
+  pivot_longer(cols = starts_with("freq_"), names_to = "Year", values_to = "Frequency")
+
+state_freq_long
+```
+
+
+```{r}
+ggplot(state_freq_long, aes(x = Year, y = reorder(state, Frequency), fill = Frequency)) +
+  geom_tile(color = "white") +
+  scale_fill_gradient(low = "lightblue", high = "darkblue") +
+  labs(title = "Storm Event Frequency by State and Year", x = "Year", y = "State") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+
+```{r}
+ggplot(state_freq_long, aes(x = reorder(state, Frequency), y = year, fill = Frequency)) +
+  geom_tile(color = "white") +
+  scale_fill_gradient(low = "lightblue", high = "darkblue") +  
+  labs(title = "Storm Event Frequency by State and Year", x = "State", y = "Year", fill = "Frequency") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+```{r}
+state_freq_long <- state_freq %>%
+  pivot_longer(cols = starts_with("freq_"), 
+               names_to = "year", 
+               values_to = "Frequency") %>%
+  mutate(year = sprintf("%02d", as.numeric(sub("freq_", "", year))))  
+
+ggplot(state_freq_long, aes(x = reorder(state, Frequency), y = Frequency, color = as.factor(year), size = Frequency)) +
+  geom_point(alpha = 0.7) +
+  scale_color_viridis_d() +  
+  labs(title = "Storm Event Frequency by State Across Years", x = "State", y = "Frequency", color = "Year") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+```
+
+
+```{r}
+
+plot_eventfreq <- function(data, year) {
+  ggplot(data, aes(x = reorder(value, data[[paste0("freq_", year)]]), 
+                   y = data[[paste0("freq_", year)]], 
+                   size = data[[paste0("freq_", year)]], 
+                   color = data[[paste0("freq_", year)]])) +
+    geom_point(alpha = 0.7) +
+    scale_color_gradient(low = "lightblue", high = "darkblue", name = "Frequency") +
+    scale_size_continuous(name = "Frequency") +
+    labs(title = paste("Storm Event Frequency by State in", year), 
+         x = "State", y = "Frequency") +
+    theme_minimal() +
+    theme(axis.text.x = element_text(angle = 90, hjust = 1))
+}
+
+
+for (year in 2007:2021) {
+  plot <- plot_eventfreq(get(paste0("statefreq_", year)), year)
+  print(plot)
+}
+```
+
+
+```{r}
+state_start_end <- state_freq_long %>% filter(year %in% c(2007, 2021))
+
+ggplot(state_start_end, aes(x = factor(year), y = Frequency, group = state, color = state)) +
+  geom_line(size = 1.2) +
+  geom_point(size = 3) +
+  labs(title = "Change in Storm Event Frequency (2007 vs. 2021)", x = "Year", y = "Frequency") +
+  theme_minimal() +
+  theme(legend.position = "right")
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+##--------------- storm -------------
+```{r}
+table(t_2007$event_type)
+table(t_2008$event_type)
+table(t_2009$event_type)
+table(t_2010$event_type)
+table(t_2011$event_type)
+table(t_2012$event_type)
+table(t_2013$event_type)
+table(t_2014$event_type)
+table(t_2015$event_type)
+table(t_2016$event_type)
+table(t_2017$event_type)
+table(t_2018$event_type)
+table(t_2019$event_type)
+table(t_2020$event_type)
+table(t_2021$event_type)
+```
+
+
+```{r}
+t_2011$event_type <- replace(t_2011$event_type, t_2011$event_type == "Hurricane", "Hurricane (Typhoon)")
+t_2017$event_type <- replace(t_2017$event_type, t_2017$event_type == "Hurricane", "Hurricane (Typhoon)")
+t_2018$event_type <- replace(t_2018$event_type, t_2018$event_type == "Hurricane", "Hurricane (Typhoon)")
+t_2019$event_type <- replace(t_2019$event_type, t_2019$event_type == "Hurricane", "Hurricane (Typhoon)")
+t_2020$event_type <- replace(t_2020$event_type, t_2020$event_type == "Hurricane", "Hurricane (Typhoon)")
+t_2021$event_type <- replace(t_2021$event_type, t_2021$event_type == "Hurricane", "Hurricane (Typhoon)")
+```
+
+```{r}
+generate_storm_freq <- function(data, year) {
+  storm_freq <- as.data.frame(table(data$event_type))
+  colnames(storm_freq) <- c("storm", paste0("freq_", year))
+  print(storm_freq)
+  return(storm_freq)
+}
+
+storm_list <- lapply(2007:2021, function(year) {
+  data <- get(paste0("t_", year))
+  generate_storm_freq(data, year)
+})
+
+
+names(storm_list) <- paste0("stormfreq_", 2007:2021)
+
+for (year in 2007:2021) {
+  assign(paste0("stormfreq_", year), generate_storm_freq(get(paste0("t_", year)), year))
+}
+```
+
+
+
+
+```{r}
+freq_storms <- lapply(years, function(year) {
+  df_name <- paste0("stormfreq_", year)
+  
+
+  if (exists(df_name)) {
+    temp_df <- get(df_name)
+    
+    colnames(temp_df) <- c("event_type", paste0("freq_", year))
+    return(temp_df)
+  } else {
+    cat(paste("Data frame", df_name, "does not exist. Skipping.\n"))
+    return(NULL)}})
+
+freq_storms <- Filter(Negate(is.null), freq_storms)
+
+storm_freq <- Reduce(function(x, y) merge(x, y, by = "event_type", all = TRUE), freq_storms)
+
+print(storm_freq)
+```
+
+
+```{r}
+storm_freq_long <- storm_freq %>%
+  pivot_longer(cols = starts_with("freq_"), names_to = "Year", values_to = "Frequency")
+
+
+ggplot(storm_freq_long, aes(x = event_type, y = Frequency, fill = Year)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Frequency of Storm Events by Year", x = "Event Type", y = "Frequency") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
+```
+
+
+```{r}
+ggplot(storm_freq_long, aes(x = Year, y = Frequency, color = event_type, group = event_type)) +
+  geom_line(size = 1) +
+  geom_point(size = 2) +
+  labs(title = "Frequency Trends of Storm Events Over Years", x = "Year", y = "Frequency") +
+  theme_minimal() +
+  theme(legend.position = "right")
+```
+
+```{r}
+ggplot(storm_freq_long, aes(x = Year, y = event_type, fill = Frequency)) +
+  geom_tile(color = "white") +
+  scale_fill_gradient(low = "lightblue", high = "darkblue") +
+  labs(title = "Heatmap of Storm Event Frequencies by Year", x = "Year", y = "Event Type") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
+```
+
+```{r}
+state_freq_short <- bind_rows(
+  lapply(years, function(year) {
+    df_name <- paste0("statefreq_", year)
+    if (exists(df_name)) {
+      get(df_name) %>%
+        rename(State = value, Frequency = !!sym(paste0("freq_", year))) %>%
+        mutate(Year = year) %>%
+        select(State, Frequency, Year)
+    } else {
+      cat(paste("Data frame", df_name, "does not exist. Skipping.\n"))
+      return(NULL)
+    }
+  })
+)
+
+class(state_freq_short)
+head(state_freq_short)
+colnames(state_freq_short)
+```
+
+```{r}
+generate_choropleth_map <- function(data, year, map_data) {
+  data_filtered <- data %>%
+    filter(year == year) %>%
+    mutate(state = tolower(state))
+  
+  map_data_year <- merge(map_data, data_filtered, by.x = "region", by.y = "state", all.x = TRUE)
+
+  ggplot(map_data_year, aes(long, lat, group = group, fill = Frequency)) +
+    geom_polygon(color = "white") +
+    scale_fill_gradient(low = "lightblue", high = "darkblue", na.value = "grey90") +
+    labs(
+      title = paste("Choropleth Map of Storm Frequencies by State (", year, ")", sep = ""),
+      fill = "Frequency"
+    ) +
+    theme_minimal() +
+    theme(
+      axis.text = element_blank(),
+      axis.ticks = element_blank(),
+      axis.title = element_blank()
+    )
+}
+
+us_states <- map_data("state")
+
+
+for (year in 2007:2021) {
+  plot_chloro <- generate_choropleth_map(state_freq_long, year, us_states)
+  print(plot_chloro)
+}
+
+  print(plot_chloro)
+```
+
+
+
+
+
+
+```{r}
+state_freq_long <- state_freq %>%
+  pivot_longer(
+    cols = starts_with("freq_"),
+    names_to = "Year",
+    names_prefix = "freq_",
+    values_to = "Frequency"
+  ) %>%
+  mutate(Year = as.integer(Year))
+```
+
+```{r}
+lm_state <- state_freq_long %>%
+  group_by(state) %>%
+  summarize(model = list(lm(Frequency ~ Year, data = pick(everything())))) %>%
+  mutate(tidy = purrr::map(model, broom::tidy)) %>%
+  unnest(tidy)
+
+print(lm_state)
+```
+
+```{r}
+ranked_state <- lm_state %>%
+  filter(term == "Year") %>%
+  arrange(desc(estimate))  
+ranked_state
+```
+
+```{r}
+lmer_storm <- lmer(Frequency ~ Year + (1 | event_type), data = storm_freq_long)
+
+summary(lmer_storm)
+```
+
+```{r}
+p <- ggplot(state_freq_short, aes(x = Year, y = Frequency, fill = as.factor(Year))) +
+  geom_bar(stat = "identity") +
+  labs(title = "Storm Event Frequency Over Years by State", x = "Year", y = "Frequency") +
+  theme_minimal() +
+  theme(legend.position = "none")
+
+
+p_interactive <- ggplotly(p) %>%
+  layout(
+    updatemenus = list(
+      list(
+        type = "dropdown",
+        active = 0,
+        buttons = lapply(unique(state_freq_short$state), function(state) {
+          list(
+            method = "update",
+            label = state,
+            args = list(list(visible = state_freq_short$state == state))
+          )
+        })
+      )
+    )
+  )
+
+p_interactive
+```
+
+
+```{r}
+p_line <- ggplot(state_freq_short, aes(x = Year, y = Frequency, color = State, group = State)) +
+  geom_line() +
+  geom_point() +
+  labs(title = "Storm Event Frequency Over Years by State", x = "Year", y = "Frequency") +
+  theme_minimal()
+
+p_line_interactive <- ggplotly(p_line)
+p_line_interactive
+```
+
+```{r}
+heatmap_data_long <- state_freq_short %>%
+  pivot_wider(names_from = Year, values_from = Frequency, values_fill = 0) %>%
+  pivot_longer(
+    cols = starts_with("20"), 
+    names_to = "Year",
+    values_to = "Frequency"
+  )
+
+heatmap_data_long <- heatmap_data_long %>%
+  mutate(Year = as.numeric(Year))
+
+p_heatmap <- plot_ly(
+  data = heatmap_data_long,
+  x = ~Year,
+  y = ~State,
+  z = ~Frequency,
+  type = "heatmap",
+  colors = "Blues"
+) %>%
+  layout(
+    title = "Heatmap of Storm Frequency by State and Year",
+    xaxis = list(title = "Year"),
+    yaxis = list(title = "State")
+  )
+
+p_heatmap
+```
+
+```{r}
+p_scatter <- ggplot(state_freq_short, aes(x = Year, y = Frequency, color = State)) +
+  geom_point(size = 3) +
+  labs(title = "Storm Frequency by Year and State", x = "Year", y = "Frequency") +
+  theme_minimal()
+
+p_scatter_interactive <- ggplotly(p_scatter)
+p_scatter_interactive
+```
+
+
+
+
+```{r}
+
+us_states <- map_data("state")
+
+
+state_freq_long <- state_freq_long %>%
+  mutate(region = tolower(state))
+
+map_data_combined <- merge(us_states, state_freq_long, by = "region", all.x = TRUE)
+
+map_data_combined <- map_data_combined %>%
+  mutate(
+    locations = state.abb[match(region, tolower(state.name))]
+  )
+
+if (any(is.na(map_data_combined$locations))) {
+  unmatched <- unique(map_data_combined$region[is.na(map_data_combined$locations)])
+  message("Unmatched regions: ", paste(unmatched, collapse = ", "))
+  map_data_combined <- map_data_combined %>% filter(!is.na(locations))
+}
+
+
+zmin <- min(map_data_combined$Frequency, na.rm = TRUE)
+zmax <- max(map_data_combined$Frequency, na.rm = TRUE)
+
+interactive_map <- plot_ly(
+  data = map_data_combined,
+  type = "choropleth",
+  locations = ~locations,
+  locationmode = "USA-states",
+  z = ~Frequency,
+  zmin = zmin,
+  zmax = zmax,
+  colorscale = list(
+    c(0, "darkblue"),
+    c(1, "lightblue")
+  ),
+  reversescale = TRUE,
+  text = ~paste("State:", region,
+                "<br>Year:", Year,
+                "<br>Frequency:", Frequency),
+  hoverinfo = "text",
+  frame = ~Year
+) %>%
+  layout(
+    title = "Storm Frequencies by State (2007-2021)",
+    geo = list(
+      scope = "usa",
+      projection = list(type = "albers usa"),
+      showlakes = TRUE,
+      lakecolor = "white"
+    )
+  ) %>%
+  animation_opts(
+    frame = 1000,
+    easing = "linear",
+    redraw = TRUE
+  )
+
+
+interactive_map
+```
+
+

@@ -1,0 +1,615 @@
+---
+title: "DSHB Capstone"
+author: "Liam Smith-Becker, Andi Donnelly"
+date: "2024-10-16"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(httr)
+library(readxl)
+library(knitr)
+library(tidyverse)
+library(janitor)
+library(psych)
+library(dplyr)
+library(janitor)
+library(ggthemes)
+library(ggplot2)
+library(corrplot)
+library(tidyr)
+library(maps)
+library(scales)
+library(plotly)
+library(gganimate)
+library(broom)
+library(Matrix)
+library(lme4)
+```
+
+
+
+```{r}
+df_2019 <- read.csv(gzfile("2019_details.csv.gz"))
+df_2021 <- read.csv(gzfile("2021_details.csv.gz"))
+df_2022 <- read.csv(gzfile("2022_details.csv.gz"))
+df_2023 <- read.csv(gzfile("2023_details.csv.gz")) 
+df_2024 <- read.csv(gzfile("2024_details.csv.gz")) 
+```
+
+
+
+```{r}
+states_to_remove <- c("AMERICAN SAMOA", "DISTRICT OF COLUMBIA", "E PACIFIC", 
+                      "GULF OF MEXICO", "HAWAII WATERS", "LAKE ERIE", 
+                      "LAKE HURON", "LAKE MICHIGAN", "LAKE ONTARIO", 
+                      "LAKE ST CLAIR", "LAKE SUPERIOR", "PUERTO RICO", "ATLANTIC NORTH", "ATLANTIC SOUTH", "GUAM", 
+                      "ST LAWRENCE R","VIRGIN ISLANDS", "GULF OF ALASKA", "GUAM WATERS")
+
+df_2019 <- df_2019[!df_2019$STATE %in% states_to_remove, ]
+df_2021 <- df_2021[!df_2021$STATE %in% states_to_remove, ]
+df_2022 <- df_2022[!df_2022$STATE %in% states_to_remove, ]
+df_2023 <- df_2023[!df_2023$STATE %in% states_to_remove, ]
+df_2024 <- df_2024[!df_2024$STATE %in% states_to_remove, ]
+```
+
+
+```{r}
+df_2019 %>% janitor::clean_names()
+df_2021 %>% janitor::clean_names()
+df_2022 %>% janitor::clean_names()
+df_2023 %>% janitor::clean_names()
+df_2024 %>% janitor::clean_names()
+```
+
+
+
+```{r}
+colnames(df_2019)
+```
+
+```{r}
+table(df_2019$EVENT_TYPE)
+table(df_2021$EVENT_TYPE)
+table(df_2022$EVENT_TYPE)
+table(df_2023$EVENT_TYPE)
+table(df_2024$EVENT_TYPE)
+```
+
+
+```{r}
+table(df_2019$STATE)
+table(df_2021$STATE)
+table(df_2022$STATE)
+table(df_2023$STATE)
+table(df_2024$STATE)
+```
+
+
+```{r}
+stormfreq_2019 <- as.data.frame(table(df_2019$EVENT_TYPE))
+colnames(stormfreq_2019) <- c("Value", "Frequency")
+print(stormfreq_2019)
+
+stormfreq_2021 <- as.data.frame(table(df_2021$EVENT_TYPE))
+colnames(stormfreq_2021) <- c("Value", "Frequency")
+print(stormfreq_2021)
+
+stormfreq_2022 <- as.data.frame(table(df_2022$EVENT_TYPE))
+colnames(stormfreq_2022) <- c("Value", "Frequency")
+print(stormfreq_2022)
+
+stormfreq_2023 <- as.data.frame(table(df_2023$EVENT_TYPE))
+colnames(stormfreq_2023) <- c("Value", "Frequency")
+print(stormfreq_2023)
+
+stormfreq_2024 <- as.data.frame(table(df_2024$EVENT_TYPE))
+colnames(stormfreq_2024) <- c("Value", "Frequency")
+print(stormfreq_2024)
+```
+
+
+
+```{r}
+statefreq_2019 <- as.data.frame(table(df_2019$STATE))
+colnames(statefreq_2019) <- c("Value", "Frequency")
+print(statefreq_2019)
+
+statefreq_2021 <- as.data.frame(table(df_2021$STATE))
+colnames(statefreq_2021) <- c("Value", "Frequency")
+print(statefreq_2021)
+
+statefreq_2022 <- as.data.frame(table(df_2022$STATE))
+colnames(statefreq_2022) <- c("Value", "Frequency")
+print(statefreq_2022)
+
+statefreq_2023 <- as.data.frame(table(df_2023$STATE))
+colnames(statefreq_2023) <- c("Value", "Frequency")
+print(statefreq_2023)
+
+statefreq_2024 <- as.data.frame(table(df_2024$STATE))
+colnames(statefreq_2024) <- c("Value", "Frequency")
+print(statefreq_2024)
+```
+
+```{r}
+ggplot(stormfreq_2019, aes(x = Value, y = Frequency)) +
+  geom_bar(stat = "identity") +
+  theme_minimal() +
+  labs(title="Storm Frequency Distribution 2019", x="Categories", y="Frequency")
+
+ggplot(stormfreq_2021, aes(x = Value, y = Frequency)) +
+  geom_bar(stat = "identity") +
+  theme_minimal() +
+  labs(title="Storm Frequency Distribution 2021", x="Categories", y="Frequency")
+
+ggplot(stormfreq_2022, aes(x = Value, y = Frequency)) +
+  geom_bar(stat = "identity") +
+  theme_minimal() +
+  labs(title="Storm Frequency Distribution 2022", x="Categories", y="Frequency")
+
+ggplot(stormfreq_2023, aes(x = Value, y = Frequency)) +
+  geom_bar(stat = "identity") +
+  theme_minimal() +
+  labs(title="Storm Frequency Distribution 2023", x="Categories", y="Frequency")
+
+ggplot(stormfreq_2024, aes(x = Value, y = Frequency)) +
+  geom_bar(stat = "identity") +
+  theme_minimal() +
+  labs(title="Storm Frequency Distribution 2024", x="Categories", y="Frequency")
+
+```
+
+```{r}
+ggplot(statefreq_2019, aes(x = Value, y = Frequency)) +
+  geom_bar(stat = "identity") +
+  theme_minimal() +
+  labs(title="State Frequency Distribution 2019", x="Categories", y="Frequency")
+
+ggplot(statefreq_2021, aes(x = Value, y = Frequency)) +
+  geom_bar(stat = "identity") +
+  theme_minimal() +
+  labs(title="State Frequency Distribution 2021", x="Categories", y="Frequency")
+
+ggplot(statefreq_2022, aes(x = Value, y = Frequency)) +
+  geom_bar(stat = "identity") +
+  theme_minimal() +
+  labs(title="State Frequency Distribution 2022", x="Categories", y="Frequency")
+
+ggplot(statefreq_2023, aes(x = Value, y = Frequency)) +
+  geom_bar(stat = "identity") +
+  theme_minimal() +
+  labs(title="State Frequency Distribution 2023", x="Categories", y="Frequency")
+
+ggplot(statefreq_2024, aes(x = Value, y = Frequency)) +
+  geom_bar(stat = "identity") +
+  theme_minimal() +
+  labs(title="State Frequency Distribution 2024", x="Categories", y="Frequency")
+```
+
+
+```{r}
+stormfreq_2019
+stormfreq_2021
+stormfreq_2022
+stormfreq_2023
+stormfreq_2024
+```
+
+```{r}
+
+storm_freq_dfs <- list(stormfreq_2019, stormfreq_2021, stormfreq_2022, stormfreq_2023, stormfreq_2024)
+
+common_event_types <- Reduce(intersect, lapply(storm_freq_dfs, function(df) df$Value))
+
+filter_common_types <- function(df, common_types) {
+  df <- df[df$Value %in% common_types, ]
+  df <- df[order(df$Value), ]  
+  return(df)
+}
+
+stormfreq_2019 <- filter_common_types(stormfreq_2019, common_event_types)
+stormfreq_2021 <- filter_common_types(stormfreq_2021, common_event_types)
+stormfreq_2022 <- filter_common_types(stormfreq_2022, common_event_types)
+stormfreq_2023 <- filter_common_types(stormfreq_2023, common_event_types)
+stormfreq_2024 <- filter_common_types(stormfreq_2024, common_event_types)
+
+```
+
+
+
+```{r}
+stormfreq_2019 <- stormfreq_2019 %>% rename(freq_2019 = Frequency)
+stormfreq_2021 <- stormfreq_2021 %>% rename(freq_2021 = Frequency)
+stormfreq_2022 <- stormfreq_2022 %>% rename(freq_2022 = Frequency)
+stormfreq_2023 <- stormfreq_2023 %>% rename(freq_2023 = Frequency)
+stormfreq_2024 <- stormfreq_2024 %>% rename(freq_2024 = Frequency)
+stormfreq_2024
+```
+
+
+
+
+```{r}
+storm_freq_dfs <- list(stormfreq_2019, stormfreq_2021, stormfreq_2022, stormfreq_2023, stormfreq_2024)
+storm_freq <- Reduce(function(x, y) merge(x, y, by = "Value", all = TRUE), storm_freq_dfs)
+
+storm_freq
+
+storm_freq <- storm_freq %>% rename(event_type = Value)
+```
+
+```{r}
+
+storm_freq_long <- storm_freq %>%
+  pivot_longer(cols = starts_with("freq_"), names_to = "Year", values_to = "Frequency")
+
+
+ggplot(storm_freq_long, aes(x = event_type, y = Frequency, fill = Year)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Frequency of Storm Events by Year", x = "Event Type", y = "Frequency") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
+
+```
+
+
+```{r}
+
+ggplot(storm_freq_long, aes(x = Year, y = Frequency, color = event_type, group = event_type)) +
+  geom_line(size = 1) +
+  geom_point(size = 2) +
+  labs(title = "Frequency Trends of Storm Events Over Years", x = "Year", y = "Frequency") +
+  theme_minimal() +
+  theme(legend.position = "right")
+
+```
+```{r}
+
+ggplot(storm_freq_long, aes(x = Year, y = event_type, fill = Frequency)) +
+  geom_tile(color = "white") +
+  scale_fill_gradient(low = "lightblue", high = "darkblue") +
+  labs(title = "Heatmap of Storm Event Frequencies by Year", x = "Year", y = "Event Type") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
+
+```
+
+
+
+```{r}
+state_freq_combined <- bind_rows(
+  mutate(statefreq_2019, Year = 2019),
+  mutate(statefreq_2021, Year = 2021),
+  mutate(statefreq_2022, Year = 2022),
+  mutate(statefreq_2023, Year = 2023),
+  mutate(statefreq_2024, Year = 2024)
+)
+
+class(state_freq_combined) 
+
+head(state_freq_combined)
+colnames(state_freq_combined)
+
+```
+
+
+
+```{r}
+unique(state_freq_combined$Year) 
+head(state_freq_combined$state)
+storm_state_2023 <- filter(state_freq_combined, Year == 2023)
+
+```
+
+
+
+```{r}
+us_states <- map_data("state")
+state_freq_combined <- rename(state_freq_combined, state = Value)
+```
+
+
+
+```{r}
+##2019
+
+storm_state_2019 <- filter(state_freq_combined, Year == 2019)
+
+storm_state_2019$state <- tolower(storm_state_2019$state)
+
+map_data_2019 <- merge(us_states, storm_state_2019, by.x = "region", by.y = "state", all.x = TRUE)
+
+
+ggplot(map_data_2019, aes(long, lat, group = group, fill = Frequency)) +
+  geom_polygon(color = "white") +
+  scale_fill_gradient(low = "lightblue", high = "darkgreen", na.value = "grey90") +
+  labs(title = "Storm Event Frequency by State in 2019", fill = "Frequency", x = NULL, y = NULL) +
+  theme_minimal() +
+  theme(axis.text = element_blank(), axis.ticks = element_blank(), panel.grid = element_blank())
+
+##2021
+storm_state_2021 <- filter(state_freq_combined, Year == 2021)
+
+storm_state_2021$state <- tolower(storm_state_2021$state)
+
+map_data_2021 <- merge(us_states, storm_state_2021, by.x = "region", by.y = "state", all.x = TRUE)
+
+
+ggplot(map_data_2021, aes(long, lat, group = group, fill = Frequency)) +
+  geom_polygon(color = "white") +
+  scale_fill_gradient(low = "lightblue", high = "darkgreen", na.value = "grey90") +
+  labs(title = "Storm Event Frequency by State in 2021", fill = "Frequency", x = NULL, y = NULL) +
+  theme_minimal() +
+  theme(axis.text = element_blank(), axis.ticks = element_blank(), panel.grid = element_blank())
+
+##2022
+storm_state_2022 <- filter(state_freq_combined, Year == 2022)
+
+storm_state_2022$state <- tolower(storm_state_2022$state)
+
+map_data_2022 <- merge(us_states, storm_state_2022, by.x = "region", by.y = "state", all.x = TRUE)
+
+
+ggplot(map_data_2022, aes(long, lat, group = group, fill = Frequency)) +
+  geom_polygon(color = "white") +
+  scale_fill_gradient(low = "lightblue", high = "darkgreen", na.value = "grey90") +
+  labs(title = "Storm Event Frequency by State in 2022", fill = "Frequency", x = NULL, y = NULL) +
+  theme_minimal() +
+  theme(axis.text = element_blank(), axis.ticks = element_blank(), panel.grid = element_blank())
+
+##2023
+storm_state_2023 <- filter(state_freq_combined, Year == 2023)
+
+storm_state_2023$state <- tolower(storm_state_2023$state)
+
+map_data_2023 <- merge(us_states, storm_state_2023, by.x = "region", by.y = "state", all.x = TRUE)
+
+ggplot(map_data_2023, aes(long, lat, group = group, fill = Frequency)) +
+  geom_polygon(color = "white") +
+  scale_fill_gradient(low = "lightblue", high = "darkgreen", na.value = "grey90") +
+  labs(title = "Storm Event Frequency by State in 2023", fill = "Frequency", x = NULL, y = NULL) +
+  theme_minimal() +
+  theme(axis.text = element_blank(), axis.ticks = element_blank(), panel.grid = element_blank())
+
+##2024
+storm_state_2024 <- filter(state_freq_combined, Year == 2024)
+
+storm_state_2024$state <- tolower(storm_state_2024$state)
+
+map_data_2024 <- merge(us_states, storm_state_2024, by.x = "region", by.y = "state", all.x = TRUE)
+
+
+ggplot(map_data_2024, aes(long, lat, group = group, fill = Frequency)) +
+  geom_polygon(color = "white") +
+  scale_fill_gradient(low = "lightblue", high = "darkgreen", na.value = "grey90") +
+  labs(title = "Storm Event Frequency by State in 2024", fill = "Frequency", x = NULL, y = NULL) +
+  theme_minimal() +
+  theme(axis.text = element_blank(), axis.ticks = element_blank(), panel.grid = element_blank())
+
+```
+
+
+```{r}
+##2019
+ggplot(storm_state_2019, aes(x = reorder(state, Frequency), y = Frequency, size = Frequency, color = Frequency)) +
+  geom_point(alpha = 0.7) +
+  scale_color_gradient(low = "lightblue", high = "darkblue") +
+  labs(title = "Storm Event Frequency by State in 2019", x = "State", y = "Frequency") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) 
+
+##2021
+ggplot(storm_state_2021, aes(x = reorder(state, Frequency), y = Frequency, size = Frequency, color = Frequency)) +
+  geom_point(alpha = 0.7) +
+  scale_color_gradient(low = "lightblue", high = "darkblue") +
+  labs(title = "Storm Event Frequency by State in 2021", x = "State", y = "Frequency") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) 
+
+##2022
+ggplot(storm_state_2022, aes(x = reorder(state, Frequency), y = Frequency, size = Frequency, color = Frequency)) +
+  geom_point(alpha = 0.7) +
+  scale_color_gradient(low = "lightblue", high = "darkblue") +
+  labs(title = "Storm Event Frequency by State in 2022", x = "State", y = "Frequency") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) 
+
+##2023
+ggplot(storm_state_2023, aes(x = reorder(state, Frequency), y = Frequency, size = Frequency, color = Frequency)) +
+  geom_point(alpha = 0.7) +
+  scale_color_gradient(low = "lightblue", high = "darkblue") +
+  labs(title = "Storm Event Frequency by State in 2023", x = "State", y = "Frequency") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) 
+
+##2024
+ggplot(storm_state_2024, aes(x = reorder(state, Frequency), y = Frequency, size = Frequency, color = Frequency)) +
+  geom_point(alpha = 0.7) +
+  scale_color_gradient(low = "lightblue", high = "darkblue") +
+  labs(title = "Storm Event Frequency by State in 2024", x = "State", y = "Frequency") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) 
+
+
+```
+```{r}
+ggplot(state_freq_combined, aes(x = Year, y = Frequency, fill = as.factor(Year))) +
+  geom_bar(stat = "identity") +
+  facet_wrap(~ state, scales = "free_y") +
+  labs(title = "Storm Event Frequency Over Years by State", x = "Year", y = "Frequency") +
+  theme_minimal() +
+  theme(legend.position = "none")
+```
+
+```{r}
+###this package is struggling a bit to change through - it might be the size of the data???
+
+p <- ggplot(state_freq_combined, aes(x = Year, y = Frequency, fill = as.factor(Year))) +
+  geom_bar(stat = "identity") +
+  labs(title = "Storm Event Frequency Over Years by State", x = "Year", y = "Frequency") +
+  theme_minimal() +
+  theme(legend.position = "none")
+
+
+p_interactive <- ggplotly(p) %>%
+  layout(
+    updatemenus = list(
+      list(
+        type = "dropdown",
+        active = 0,
+        buttons = lapply(unique(state_freq_combined$state), function(state) {
+          list(
+            method = "update",
+            label = state,
+            args = list(list(visible = state_freq_combined$state == state))
+          )
+        })
+      )
+    )
+  )
+
+p_interactive
+```
+
+
+```{r}
+start_end <- state_freq_combined %>% filter(Year %in% c(2019, 2024))
+
+ggplot(start_end, aes(x = factor(Year), y = Frequency, group = state, color = state)) +
+  geom_line(size = 1.2) +
+  geom_point(size = 3) +
+  labs(title = "Change in Storm Event Frequency (2019 vs. 2024)", x = "Year", y = "Frequency") +
+  theme_minimal() +
+  theme(legend.position = "none")
+
+```
+
+```{r}
+ggplot(state_freq_combined, aes(x = Year, y = Frequency, group = 1)) +
+  geom_line() +
+  geom_point() +
+  facet_wrap(~ state, scales = "free_y") +
+  labs(title = "Storm Event Frequency Over Time by State", x = "Year", y = "Frequency") +
+  theme_minimal()
+```
+
+```{r}
+ggplot(state_freq_combined, aes(x = Year, y = reorder(state, Frequency), fill = Frequency)) +
+  geom_tile(color = "white") +
+  scale_fill_gradient(low = "lightblue", high = "darkblue") +
+  labs(title = "Storm Event Frequency by State and Year", x = "Year", y = "State") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+```{r}
+state_freq_dfs <- list(statefreq_2019, statefreq_2021, statefreq_2022, statefreq_2023, statefreq_2024)
+state_freq <- Reduce(function(x, y) merge(x, y, by = "Value", all = TRUE), state_freq_dfs)
+
+state_freq
+
+state_freq <- statefreq_2019 %>% rename(freq_2019 = Frequency)
+state_freq
+
+state_freq <- state_freq %>%
+  full_join(statefreq_2021 %>% rename(freq_2021 = Frequency), by = "Value") %>%
+  full_join(statefreq_2022 %>% rename(freq_2022 = Frequency), by = "Value") %>%
+  full_join(statefreq_2023 %>% rename(freq_2023 = Frequency), by = "Value") %>%
+  full_join(statefreq_2024 %>% rename(freq_2024 = Frequency), by = "Value")
+
+state_freq
+
+state_freq <- state_freq %>% rename(state = Value)
+head(state_freq)
+```
+
+```{r}
+state_freq_long <- state_freq %>%
+  pivot_longer(
+    cols = starts_with("freq_"),
+    names_to = "Year",
+    names_prefix = "freq_",
+    values_to = "Frequency"
+  ) %>%
+  mutate(Year = as.integer(Year))
+```
+
+```{r}
+lm_state <- state_freq_long %>%
+  group_by(state) %>%
+  summarize(model = list(lm(Frequency ~ Year, data = pick(everything())))) %>%
+  mutate(tidy = purrr::map(model, broom::tidy)) %>%
+  unnest(tidy)
+
+print(lm_state)
+```
+
+
+```{r}
+pm_state <- state_freq_long %>%
+  group_by(state) %>%
+  summarize(model = list(lm(Frequency ~ poly(Year, 2), data = pick(everything())))) %>%
+  mutate(tidy = purrr::map(model, broom::tidy)) %>%
+  unnest(tidy)
+
+print(pm_state)
+```
+
+
+```{r}
+filter(lm_state, state == "ALABAMA")
+filter(pm_state, state == "ALABAMA")
+```
+
+
+```{r}
+ranked_state <- lm_state %>%
+  filter(term == "Year") %>%
+  arrange(desc(estimate))  
+ranked_state
+```
+
+
+###
+A state-wise linear regression analysis was conducted to investigate frequency trends over time from 2019 to 2024. Each state's data was analyzed using Year as the predictor variable and Frequency as the outcome. The results revealed variations in trends across states. Texas demonstrated a significant upward trend, with frequency increasing by approximately 598.72 units annually, suggesting that specific factors might be contributing to consistent rise. Oklahoma and Georgia showed positive, though less pronounced, trends with annual increases of 399.36 and 353.32 units, respectively. These positive trends in frequency imply potential growing activity or incidence rates in these states over the study period.
+
+Some states exhibited a significant decline in frequency over time. Massachusetts and Pennsylvania both showed negative trends, with frequency decreasing by approximately -76.81 and -154.47 units per year, respectively, suggesting stabilizing or diminishing activity levels in these states. Although Pennsylvania’s trend was just shy of conventional significance levels, Massachusetts's trend was statistically significant, showing a reduction in frequency over time. Alaska showed an upward trend, with a yearly increase of around 54.66 units, p = 0.05 level, a steady rise in frequency in recent years.
+
+
+```{r}
+ggplot(state_freq_long, aes(x = Year, y = Frequency, color = state)) +
+  geom_point() +
+  geom_smooth(method = "lm", formula = y ~ x, se = FALSE) +
+  labs(title = "Linear Trend of Frequency Over Time by State", y = "Frequency") +
+  theme_minimal()
+
+###hate this figure deeply
+```
+
+```{r}
+ggplot(state_freq_long, aes(x = Year, y = Frequency, color = state)) +
+  geom_point() +
+  geom_smooth(method = "lm", formula = y ~ poly(x, 2), se = FALSE) +
+  labs(title = "Polynomial Trend of Frequency Over Time by State", y = "Frequency") +
+  theme_minimal()
+
+###not all that important and i don't think we should even mention this.
+```
+
+
+
+```{r}
+lmer_storm <- lmer(Frequency ~ Year + (1 | event_type), data = storm_freq_long)
+
+summary(lmer_storm)
+```
+
+
+
+##
+A linear mixed model was conducted to examine how storm frequency varies by year and storm type. The model included year as a fixed effect and storm as a random effect to account for differences in baseline frequencies across storm types. Results show that storm types had significant baseline variability, with a random intercept standard deviation of 3596. This variance suggests that certain storm types tend to occur more frequently than others, independent of yearly changes. The fixed effects for year did not have significant changes in frequency over time. yearly effects varied in but didn't reach statistical significance, with estimates ranging from -190.57 to 348.40 and associated t-values below 1.96. The lack of significant change suggests that frequency doesn't follow a clear upward or downward trend across the years.
+
+Overall, the model shows that while different storm types vary in baseline frequency, there's no consistent trend in frequency across years. This implies that storm freq. remains relatively stable over time for most storms. Ultimately, there's importance of storm-specific baselines rather than year-over-year changes for overall storm frequency patterns.
+
+

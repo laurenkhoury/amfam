@@ -1,0 +1,262 @@
+---
+title: "DSHB Capstone"
+author: "Liam Smith-Becker, Andi Donnelly"
+date: "2024-10-16"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(httr)
+library(readxl)
+library(knitr)
+library(tidyverse)
+library(janitor)
+library(psych)
+library(dplyr)
+library(janitor)
+library(ggthemes)
+library(ggplot2)
+library(corrplot)
+```
+
+
+```{r}
+GET("https://www.ncei.noaa.gov/pub/data/swdi/stormevents/csvfiles/StormEvents_details-ftp_v1.0_d2021_c20240716.csv.gz", write_disk("2021_details.csv.gz", overwrite = TRUE))
+
+df_2021 <- read.csv(gzfile("2021_details.csv.gz"))
+
+GET("https://www.ncei.noaa.gov/pub/data/swdi/stormevents/csvfiles/StormEvents_details-ftp_v1.0_d2019_c20240117.csv.gz", write_disk("2019_details.csv.gz", overwrite = TRUE))
+
+df_2019 <- read.csv(gzfile("2019_details.csv.gz"))
+```
+
+```{r}
+insurance_2021 <- read_xlsx("avg_premium_by_state_2021.xlsx")
+insurance_2007 <- read_xlsx("avg_premium_by_state_2007.xlsx")
+
+insurance_2021 <- insurance_2021 %>%
+  rename(
+    state = ...1,
+    homeowners_avg_premium = homeowners...2,
+    homeowners_rank = homeowners...3,
+    renters_avg_premium = renters...4,
+    renters_rank = renters...5
+)
+insurance_2021 <- insurance_2021 %>% slice(-1)
+insurance_2021 <- insurance_2021 %>% slice(-n())
+
+insurance_2007 <- insurance_2007 %>%
+  rename(
+    state = ...1,
+    homeowners_avg_premium = `Homeowners `,
+    homeowners_rank = `Renters ...3`,
+    renters_avg_premium = ...4,
+    renters_rank = ` Homeowners`
+)
+insurance_2007 <- insurance_2007 %>% slice(-1)
+insurance_2007 <- insurance_2007 %>% slice(-1)
+insurance_2007 <- insurance_2007 %>% slice(-n())
+insurance_2007 <- insurance_2007 %>% select(-`Renters ...6`)
+
+glimpse(insurance_2007)
+insurance_2007$homeowners_avg_premium <- as.numeric(insurance_2007$homeowners_avg_premium)
+insurance_2007$homeowners_rank <- as.numeric(insurance_2007$homeowners_rank)
+insurance_2007$renters_avg_premium <- as.numeric(insurance_2007$renters_avg_premium)
+insurance_2007$renters_rank <- as.numeric(insurance_2007$renters_rank)
+
+glimpse(insurance_2021)
+insurance_2021$homeowners_avg_premium <- as.numeric(insurance_2021$homeowners_avg_premium)
+insurance_2021$homeowners_rank <- as.numeric(insurance_2021$homeowners_rank)
+insurance_2021$renters_avg_premium <- as.numeric(insurance_2021$renters_avg_premium)
+insurance_2021$renters_rank <- as.numeric(insurance_2021$renters_rank)
+
+insurance_2007$state <- insurance_2021$state
+
+```
+
+```{r}
+
+insurance_combined <- insurance_2007 %>%
+  rename(Homeowner_price_2007 = homeowners_avg_premium, Renter_price_2007 = renters_avg_premium) %>%
+  inner_join(insurance_2021 %>%
+               rename(Homeowner_price_2021 = homeowners_avg_premium, Renter_price_2021 = renters_avg_premium), 
+             by = "state")
+
+insurance_combined <- insurance_combined %>%
+  mutate(Homeowner_price_change = Homeowner_price_2021 - Homeowner_price_2007,
+         Renter_price_change = Renter_price_2021 - Renter_price_2007)
+
+ggplot(insurance_combined, aes(x = reorder(state, Homeowner_price_change), y = Homeowner_price_change)) +
+  geom_bar(stat = "identity") +
+  coord_flip() +
+  labs(title = "Change in Homeowner Insurance Prices (2007 to 2021)",
+       x = "State",
+       y = "Price Change") +
+  theme_bw()
+```
+
+```{r}
+ggplot(insurance_combined, aes(x = reorder(state, Renter_price_change), y = Renter_price_change)) +
+  geom_bar(stat = "identity") +
+  coord_flip() +
+  labs(title = "Change in Renter Insurance Prices (2007 to 2021)",
+       x = "State",
+       y = "Price Change") +
+  theme_minimal()
+```
+
+
+```{r}
+states_2007 <- insurance_2007 %>% select(state) %>% distinct()
+states_2021 <- insurance_2021 %>% select(state) %>% distinct()
+
+# Compare states
+missing_in_2021 <- setdiff(states_2007$state, states_2021$state)
+missing_in_2007 <- setdiff(states_2021$state, states_2007$state)
+
+```
+
+
+
+
+-------
+
+
+```{r}
+df_2019 %>% janitor::clean_names()
+df_2021 %>% janitor::clean_names()
+```
+
+```{r}
+states_to_remove <- c("AMERICAN SAMOA", "DISTRICT OF COLUMBIA", "E PACIFIC", 
+                      "GULF OF MEXICO", "HAWAII WATERS", "LAKE ERIE", 
+                      "LAKE HURON", "LAKE MICHIGAN", "LAKE ONTARIO", 
+                      "LAKE ST CLAIR", "LAKE SUPERIOR", "PUERTO RICO", "ATLANTIC NORTH", "ATLANTIC SOUTH", "GUAM", 
+                      "ST LAWRENCE R","VIRGIN ISLANDS")
+
+df_2019 <- df_2019[!df_2019$STATE %in% states_to_remove, ]
+df_2021 <- df_2021[!df_2021$STATE %in% states_to_remove, ]
+```
+
+
+```{r}
+colnames(df_2019)
+```
+
+```{r}
+table(df_2019$EVENT_TYPE)
+```
+
+```{r}
+table(df_2021$EVENT_TYPE)
+```
+
+### 2019 Tornado: 1545 // 2021 Tornado: 1734
+### 2019 Tropical storm: 143 // 2021 Tropical storm: 276
+### 2019 Flash flood: 4084 // 2021 Flash flood: 4797
+### 2019: Storm surge/Tide: 25 // 2021 Storm surge/tide: 59
+### 2019: Winter storm: 3354 // 2021 winter storm: 2945
+### 2019: Blizzard: 852 // 2021 Blizzard: 253
+### 2019: Marine hurrican/typhoon: 6 // 2021 Marine hurricane/typhoon: 12
+### 2019: hurricane: 10 // 2021 hurricane: 39
+
+## Cold events are less frequent and warm weather events are far more frequent
+
+```{r}
+table(df_2019$STATE)
+```
+
+```{r}
+table(df_2021$STATE)
+```
+
+### Decrease in states listed in 2021 
+
+```{r}
+stormfreq_2019 <- as.data.frame(table(df_2019$EVENT_TYPE))
+colnames(stormfreq_2019) <- c("Value", "Frequency")
+print(stormfreq_2019)
+```
+
+```{r}
+stormfreq_2021 <- as.data.frame(table(df_2021$EVENT_TYPE))
+colnames(stormfreq_2021) <- c("Value", "Frequency")
+print(stormfreq_2021)
+```
+
+```{r}
+statefreq_2019 <- as.data.frame(table(df_2019$STATE))
+colnames(statefreq_2019) <- c("Value", "Frequency")
+print(statefreq_2019)
+```
+```{r}
+statefreq_2021 <- as.data.frame(table(df_2021$STATE))
+colnames(statefreq_2021) <- c("Value", "Frequency")
+print(statefreq_2021)
+```
+
+```{r}
+ggplot(stormfreq_2019, aes(x = Value, y = Frequency)) +
+  geom_bar(stat = "identity") +
+  theme_minimal() +
+  labs(title="Storm Frequency Distribution 2019", x="Categories", y="Frequency")
+
+```
+
+```{r}
+ggplot(stormfreq_2021, aes(x = Value, y = Frequency)) +
+  geom_bar(stat = "identity") +
+  theme_minimal() +
+  labs(title="Storm Frequency Distribution 2021", x="Categories", y="Frequency")
+```
+
+
+```{r}
+ggplot(statefreq_2019, aes(x = Value, y = Frequency)) +
+  geom_bar(stat = "identity") +
+  theme_minimal() +
+  labs(title="State Frequency Distribution 2019", x="Categories", y="Frequency")
+```
+
+```{r}
+ggplot(statefreq_2021, aes(x = Value, y = Frequency)) +
+  geom_bar(stat = "identity") +
+  theme_minimal() +
+  labs(title="State Frequency Distribution 2021", x="Categories", y="Frequency")
+```
+
+
+
+```{r}
+stormfreq_2019
+```
+
+```{r}
+stormfreq_2021
+```
+
+```{r}
+stormfreq_2019 <- stormfreq_2019 %>% rename(freq_2019 = Frequency)
+stormfreq_2021 <- stormfreq_2021 %>% rename(freq_2021 = Frequency)
+stormfreq_2021
+```
+
+```{r}
+storm_freq <- merge(stormfreq_2019, stormfreq_2021, by = "Value")
+
+storm_freq
+```
+
+```{r}
+statefreq_2019 <- statefreq_2019 %>% rename(freq_2019 = Frequency)
+statefreq_2021 <- statefreq_2021 %>% rename(freq_2021 = Frequency)
+statefreq_2021
+```
+
+
+```{r}
+state_freq <- merge(statefreq_2019, statefreq_2021, by = "Value")
+
+state_freq
+```
+

@@ -1,0 +1,846 @@
+---
+title: "time series"
+output: html_document
+date: "2024-10-31"
+---
+
+```{r setup, include=FALSE}
+library(httr)
+library(readxl)
+library(knitr)
+library(tidyverse)
+library(janitor)
+library(psych)
+library(dplyr)
+library(janitor)
+library(ggthemes)
+library(ggplot2)
+library(corrplot)
+library(tidyr)
+library(maps)
+library(scales)
+library(plotly)
+library(gganimate)
+library(broom)
+library(Matrix)
+library(lme4)
+library(viridis)
+```
+
+
+
+```{r}
+t_1996 <- read.csv("1996_stormdata.csv") %>% janitor::clean_names()
+t_1997 <- read.csv("1997_stormdata.csv") %>% janitor::clean_names()
+#t_1998 <- read.csv("1998_stormdata.csv") %>% janitor::clean_names()
+t_1999 <- read.csv("1999_stormdata.csv") %>% janitor::clean_names()
+t_2000 <- read.csv("2000_stormdata.csv") %>% janitor::clean_names()
+t_2001 <- read.csv("2001_stormdata.csv") %>% janitor::clean_names()
+t_2002 <- read.csv("2002_stormdata.csv") %>% janitor::clean_names()
+t_2003 <- read.csv("2003_stormdata.csv") %>% janitor::clean_names()
+t_2004 <- read.csv("2004_stormdata.csv") %>% janitor::clean_names()
+t_2005 <- read.csv("2005_stormdata.csv") %>% janitor::clean_names()
+t_2006 <- read.csv("2006_stormdata.csv") %>% janitor::clean_names()
+t_2007 <- read.csv("2007_stormdata.csv") %>% janitor::clean_names()
+t_2008 <- read.csv("2008_stormdata.csv") %>% janitor::clean_names()
+t_2009 <- read.csv("2009_stormdata.csv") %>% janitor::clean_names()
+t_2010 <- read.csv("2010_stormdata.csv") %>% janitor::clean_names()
+t_2011 <- read.csv("2011_stormdata.csv") %>% janitor::clean_names()
+t_2012 <- read.csv("2012_stormdata.csv") %>% janitor::clean_names()
+t_2013 <- read.csv("2013_stormdata.csv") %>% janitor::clean_names()
+```
+
+```{r}
+states_to_remove <- c("AMERICAN SAMOA", "ATLANTIC NORTH", "ATLANTIC SOUTH", "DISTRICT OF COLUMBIA", "E PACIFIC", "GULF OF ALASKA", "GULF OF MEXICO", "GUAM", "HAWAII WATERS", "LAKE ERIE", "LAKE HURON", "LAKE MICHIGAN", "LAKE ONTARIO", "LAKE ST CLAIR", "LAKE SUPERIOR", "PUERTO RICO", "ST LAWRENCE R", "VIRGIN ISLANDS", " ")
+
+years <- 1996:2013
+
+for (year in years) {
+  df_name <- paste0("t_", year)
+  
+
+  if (exists(df_name)) {
+    assign(df_name, get(df_name)[!get(df_name)$state %in% states_to_remove, ])
+  } else {
+    cat(paste("Data frame", df_name, "does not exist.\n"))}}
+
+table(t_1996$state)
+```
+
+```{r}
+statefreq_1996 <- as.data.frame(table(t_1996$state))
+colnames(statefreq_1996) <- c("value", "freq_1996")
+print(statefreq_1996)
+
+statefreq_1997 <- as.data.frame(table(t_1997$state))
+colnames(statefreq_1997) <- c("value", "freq_1997")
+print(statefreq_1997)
+
+statefreq_1999 <- as.data.frame(table(t_1999$state))
+colnames(statefreq_1999) <- c("value", "freq_1999")
+print(statefreq_1999)
+
+statefreq_2000 <- as.data.frame(table(t_2000$state))
+colnames(statefreq_2000) <- c("value", "freq_2000")
+print(statefreq_2000)
+
+statefreq_2001 <- as.data.frame(table(t_2001$state))
+colnames(statefreq_2001) <- c("value", "freq_2001")
+print(statefreq_2000)
+
+statefreq_2002 <- as.data.frame(table(t_2002$state))
+colnames(statefreq_2002) <- c("value", "freq_2002")
+print(statefreq_2002)
+
+statefreq_2003 <- as.data.frame(table(t_2003$state))
+colnames(statefreq_2003) <- c("value", "freq_2003")
+print(statefreq_2003)
+
+statefreq_2004 <- as.data.frame(table(t_2004$state))
+colnames(statefreq_2004) <- c("value", "freq_2004")
+print(statefreq_2004)
+
+statefreq_2005 <- as.data.frame(table(t_2005$state))
+colnames(statefreq_2005) <- c("value", "freq_2005")
+print(statefreq_2005)
+
+statefreq_2006 <- as.data.frame(table(t_2006$state))
+colnames(statefreq_2006) <- c("value", "freq_2006")
+print(statefreq_2006)
+
+statefreq_2007 <- as.data.frame(table(t_2007$state))
+colnames(statefreq_2007) <- c("value", "freq_2007")
+print(statefreq_2007)
+
+statefreq_2008 <- as.data.frame(table(t_2008$state))
+colnames(statefreq_2008) <- c("value", "freq_2008")
+print(statefreq_2008)
+
+statefreq_2009 <- as.data.frame(table(t_2009$state))
+colnames(statefreq_2009) <- c("value", "freq_2009")
+print(statefreq_2009)
+
+statefreq_2010 <- as.data.frame(table(t_2010$state))
+colnames(statefreq_2010) <- c("value", "freq_2010")
+print(statefreq_2010)
+
+statefreq_2011 <- as.data.frame(table(t_2011$state))
+colnames(statefreq_2011) <- c("value", "freq_2011")
+print(statefreq_2011)
+
+statefreq_2012 <- as.data.frame(table(t_2012$state))
+colnames(statefreq_2012) <- c("value", "freq_2012")
+print(statefreq_2012)
+
+statefreq_2013 <- as.data.frame(table(t_2013$state))
+colnames(statefreq_2013) <- c("value", "freq_2013")
+print(statefreq_2013)
+```
+
+
+```{r}
+years <- c(1996, 1997, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013)
+
+freq_state <- lapply(years, function(year) {
+  temps_storm <- paste0("statefreq_", year)
+  if (exists(temps_storm)) {
+    temp_df <- get(temps_storm)
+    
+    colnames(temp_df) <- c("state", paste0("freq_", year))
+    return(temp_df)
+  } else {
+    cat(paste("Data frame", temps_storm, "does not exist. Skipping.\n"))
+    return(NULL)}})
+
+freq_state <- Filter(Negate(is.null), freq_state)
+
+
+state_freq <- Reduce(function(x, y) merge(x, y, by = "state", all = TRUE), freq_state)
+
+state_freq
+```
+
+
+```{r}
+state_freq_long <- state_freq %>%
+  pivot_longer(cols = starts_with("freq_"), names_to = "Year", values_to = "Frequency")
+
+state_freq_long
+```
+
+
+
+```{r}
+ggplot(state_freq_long, aes(x = Year, y = reorder(state, Frequency), fill = Frequency)) +
+  geom_tile(color = "white") +
+  scale_fill_gradient(low = "lightblue", high = "darkblue") +
+  labs(title = "Storm Event Frequency by State and Year", x = "Year", y = "State") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+
+```{r}
+ggplot(state_freq_long, aes(x = reorder(state, Frequency), y = year, fill = Frequency)) +
+  geom_tile(color = "white") +
+  scale_fill_gradient(low = "lightblue", high = "darkblue") +  
+  labs(title = "Storm Event Frequency by State and Year", x = "State", y = "Year", fill = "Frequency") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+```
+
+```{r}
+state_freq_long <- state_freq %>%
+  pivot_longer(cols = starts_with("freq_"), 
+               names_to = "year", 
+               values_to = "Frequency") %>%
+  mutate(year = sprintf("%02d", as.numeric(sub("freq_", "", year))))  
+
+ggplot(state_freq_long, aes(x = reorder(state, Frequency), y = Frequency, color = as.factor(year), size = Frequency)) +
+  geom_point(alpha = 0.7) +
+  scale_color_viridis_d() +  
+  labs(title = "Storm Event Frequency by State Across Years", x = "State", y = "Frequency", color = "Year") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+```
+```{r}
+
+```
+
+
+```{r}
+### All have different legends
+ggplot(statefreq_1996, aes(x = reorder(value, freq_1996), y = freq_1996, size = freq_1996, color = freq_1996)) +
+  geom_point(alpha = 0.7) +
+  scale_color_gradient(low = "lightblue", high = "darkblue") +
+  labs(title = "Storm Event Frequency by State in 1996", x = "State", y = "Frequency") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) 
+
+ggplot(statefreq_1997, aes(x = reorder(value, freq_1997), y = freq_1997, size = freq_1997, color = freq_1997)) +
+  geom_point(alpha = 0.7) +
+  scale_color_gradient(low = "lightblue", high = "darkblue") +
+  labs(title = "Storm Event Frequency by State in 1997", x = "State", y = "Frequency") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) 
+
+ggplot(statefreq_1999, aes(x = reorder(value, freq_1999), y = freq_1999, size = freq_1999, color = freq_1999)) +
+  geom_point(alpha = 0.7) +
+  scale_color_gradient(low = "lightblue", high = "darkblue") +
+  labs(title = "Storm Event Frequency by State in 1999", x = "State", y = "Frequency") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) 
+
+ggplot(statefreq_2000, aes(x = reorder(value, freq_2000), y = freq_2000, size = freq_2000, color = freq_2000)) +
+  geom_point(alpha = 0.7) +
+  scale_color_gradient(low = "lightblue", high = "darkblue") +
+  labs(title = "Storm Event Frequency by State in 2000", x = "State", y = "Frequency") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) 
+
+ggplot(statefreq_2001, aes(x = reorder(value, freq_2001), y = freq_2001, size = freq_2001, color = freq_2001)) +
+  geom_point(alpha = 0.7) +
+  scale_color_gradient(low = "lightblue", high = "darkblue") +
+  labs(title = "Storm Event Frequency by State in 2001", x = "State", y = "Frequency") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) 
+
+ggplot(statefreq_2002, aes(x = reorder(value, freq_2002), y = freq_2002, size = freq_2002, color = freq_2002)) +
+  geom_point(alpha = 0.7) +
+  scale_color_gradient(low = "lightblue", high = "darkblue") +
+  labs(title = "Storm Event Frequency by State in 2002", x = "State", y = "Frequency") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) 
+
+
+ggplot(statefreq_2003, aes(x = reorder(value, freq_2003), y = freq_2003, size = freq_2003, color = freq_2003)) +
+  geom_point(alpha = 0.7) +
+  scale_color_gradient(low = "lightblue", high = "darkblue") +
+  labs(title = "Storm Event Frequency by State in 2003", x = "State", y = "Frequency") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) 
+
+ggplot(statefreq_2004, aes(x = reorder(value, freq_2004), y = freq_2004, size = freq_2004, color = freq_2004)) +
+  geom_point(alpha = 0.7) +
+  scale_color_gradient(low = "lightblue", high = "darkblue") +
+  labs(title = "Storm Event Frequency by State in 2004", x = "State", y = "Frequency") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) 
+
+ggplot(statefreq_2005, aes(x = reorder(value, freq_2005), y = freq_2005, size = freq_2005, color = freq_2005)) +
+  geom_point(alpha = 0.7) +
+  scale_color_gradient(low = "lightblue", high = "darkblue") +
+  labs(title = "Storm Event Frequency by State in 2005", x = "State", y = "Frequency") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) 
+
+ggplot(statefreq_2006, aes(x = reorder(value, freq_2006), y = freq_2006, size = freq_2006, color = freq_2006)) +
+  geom_point(alpha = 0.7) +
+  scale_color_gradient(low = "lightblue", high = "darkblue") +
+  labs(title = "Storm Event Frequency by State in 2006", x = "State", y = "Frequency") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) 
+
+ggplot(statefreq_2007, aes(x = reorder(value, freq_2007), y = freq_2007, size = freq_2007, color = freq_2007)) +
+  geom_point(alpha = 0.7) +
+  scale_color_gradient(low = "lightblue", high = "darkblue") +
+  labs(title = "Storm Event Frequency by State in 2007", x = "State", y = "Frequency") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) 
+
+ggplot(statefreq_2008, aes(x = reorder(value, freq_2008), y = freq_2008, size = freq_2008, color = freq_2008)) +
+  geom_point(alpha = 0.7) +
+  scale_color_gradient(low = "lightblue", high = "darkblue") +
+  labs(title = "Storm Event Frequency by State in 2008", x = "State", y = "Frequency") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) 
+
+ggplot(statefreq_2009, aes(x = reorder(value, freq_2009), y = freq_2009, size = freq_2009, color = freq_2009)) +
+  geom_point(alpha = 0.7) +
+  scale_color_gradient(low = "lightblue", high = "darkblue") +
+  labs(title = "Storm Event Frequency by State in 2009", x = "State", y = "Frequency") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) 
+
+ggplot(statefreq_2010, aes(x = reorder(value, freq_2010), y = freq_2010, size = freq_2010, color = freq_2010)) +
+  geom_point(alpha = 0.7) +
+  scale_color_gradient(low = "lightblue", high = "darkblue") +
+  labs(title = "Storm Event Frequency by State in 2010", x = "State", y = "Frequency") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) 
+
+
+ggplot(statefreq_2011, aes(x = reorder(value, freq_2011), y = freq_2011, size = freq_2011, color = freq_2011)) +
+  geom_point(alpha = 0.7) +
+  scale_color_gradient(low = "lightblue", high = "darkblue") +
+  labs(title = "Storm Event Frequency by State in 2011", x = "State", y = "Frequency") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) 
+
+
+ggplot(statefreq_2012, aes(x = reorder(value, freq_2012), y = freq_2012, size = freq_2012, color = freq_2012)) +
+  geom_point(alpha = 0.7) +
+  scale_color_gradient(low = "lightblue", high = "darkblue") +
+  labs(title = "Storm Event Frequency by State in 2012", x = "State", y = "Frequency") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) 
+
+ggplot(statefreq_2013, aes(x = reorder(value, freq_2013), y = freq_2013, size = freq_2013, color = freq_2013)) +
+  geom_point(alpha = 0.7) +
+  scale_color_gradient(low = "lightblue", high = "darkblue") +
+  labs(title = "Storm Event Frequency by State in 2013", x = "State", y = "Frequency") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) 
+
+```
+
+
+```{r}
+state_start_end <- state_freq_long %>% filter(year %in% c(1996, 2013))
+
+ggplot(state_start_end, aes(x = factor(year), y = Frequency, group = state, color = state)) +
+  geom_line(size = 1.2) +
+  geom_point(size = 3) +
+  labs(title = "Change in Storm Event Frequency (1996 vs. 2013)", x = "Year", y = "Frequency") +
+  theme_minimal() +
+  theme(legend.position = "right")
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+--------------- storm -------------
+```{r}
+table(t_1996$event_type)
+table(t_1997$event_type)
+#table(t_1998$event_type)
+table(t_1999$event_type)
+table(t_2000$event_type)
+table(t_2001$event_type)
+table(t_2002$event_type)
+table(t_2003$event_type)
+table(t_2004$event_type)
+table(t_2005$event_type)
+table(t_2006$event_type)
+table(t_2007$event_type)
+table(t_2008$event_type)
+table(t_2009$event_type)
+table(t_2010$event_type)
+table(t_2011$event_type)
+table(t_2012$event_type)
+table(t_2013$event_type)
+```
+
+
+```{r}
+t_2011$event_type <- replace(t_2011$event_type, t_2011$event_type == "Hurricane", "Hurricane (Typhoon)")
+```
+
+
+```{r}
+stormfreq_1996 <- as.data.frame(table(t_1996$event_type))
+colnames(stormfreq_1996) <- c("value", "freq_1996")
+print(stormfreq_1996)
+
+stormfreq_1997 <- as.data.frame(table(t_1997$event_type))
+colnames(stormfreq_1997) <- c("value", "freq_1997")
+print(stormfreq_1997)
+
+stormfreq_1999 <- as.data.frame(table(t_1999$event_type))
+colnames(stormfreq_1999) <- c("value", "freq_1999")
+print(stormfreq_1999)
+
+stormfreq_2000 <- as.data.frame(table(t_2000$event_type))
+colnames(stormfreq_2000) <- c("value", "freq_2000")
+print(stormfreq_2000)
+
+stormfreq_2001 <- as.data.frame(table(t_2001$event_type))
+colnames(stormfreq_2001) <- c("value", "freq_2001")
+print(stormfreq_2001)
+
+stormfreq_2002 <- as.data.frame(table(t_2002$event_type))
+colnames(stormfreq_2002) <- c("value", "freq_2002")
+print(stormfreq_2002)
+
+stormfreq_2003 <- as.data.frame(table(t_2003$event_type))
+colnames(stormfreq_2003) <- c("value", "freq_2003")
+print(stormfreq_2003)
+
+stormfreq_2004 <- as.data.frame(table(t_2004$event_type))
+colnames(stormfreq_2004) <- c("value", "freq_2004")
+print(stormfreq_2004)
+
+stormfreq_2005 <- as.data.frame(table(t_2005$event_type))
+colnames(stormfreq_2005) <- c("value", "freq_2005")
+print(stormfreq_2005)
+
+stormfreq_2006 <- as.data.frame(table(t_2006$event_type))
+colnames(stormfreq_2006) <- c("value", "freq_2006")
+print(stormfreq_2006)
+
+stormfreq_2007 <- as.data.frame(table(t_2007$event_type))
+colnames(stormfreq_2007) <- c("value", "freq_2007")
+print(stormfreq_2007)
+
+stormfreq_2008 <- as.data.frame(table(t_2008$event_type))
+colnames(stormfreq_2008) <- c("value", "freq_2008")
+print(stormfreq_2008)
+
+stormfreq_2009 <- as.data.frame(table(t_2009$event_type))
+colnames(stormfreq_2009) <- c("value", "freq_2009")
+print(stormfreq_2009)
+
+stormfreq_2010 <- as.data.frame(table(t_2010$event_type))
+colnames(stormfreq_2010) <- c("value", "freq_2010")
+print(stormfreq_2010)
+
+stormfreq_2011 <- as.data.frame(table(t_2011$event_type))
+colnames(stormfreq_2011) <- c("value", "freq_2011")
+print(stormfreq_2011)
+
+stormfreq_2012 <- as.data.frame(table(t_2012$event_type))
+colnames(stormfreq_2012) <- c("value", "freq_2012")
+print(stormfreq_2012)
+
+stormfreq_2013 <- as.data.frame(table(t_2013$event_type))
+colnames(stormfreq_2013) <- c("value", "freq_2013")
+print(stormfreq_2013)
+```
+
+
+
+```{r}
+freq_stormdfs <- lapply(years, function(year) {
+  df_name <- paste0("stormfreq_", year)
+  
+
+  if (exists(df_name)) {
+    temp_df <- get(df_name)
+    
+    colnames(temp_df) <- c("event_type", paste0("freq_", year))
+    return(temp_df)
+  } else {
+    cat(paste("Data frame", df_name, "does not exist. Skipping.\n"))
+    return(NULL)}})
+
+freq_stormdfs <- Filter(Negate(is.null), freq_stormdfs)
+
+storm_freq <- Reduce(function(x, y) merge(x, y, by = "event_type", all = TRUE), freq_stormdfs)
+
+print(storm_freq)
+```
+
+
+```{r}
+storm_freq_long <- storm_freq %>%
+  pivot_longer(cols = starts_with("freq_"), names_to = "Year", values_to = "Frequency")
+
+
+ggplot(storm_freq_long, aes(x = event_type, y = Frequency, fill = Year)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Frequency of Storm Events by Year", x = "Event Type", y = "Frequency") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
+```
+
+
+```{r}
+ggplot(storm_freq_long, aes(x = Year, y = Frequency, color = event_type, group = event_type)) +
+  geom_line(size = 1) +
+  geom_point(size = 2) +
+  labs(title = "Frequency Trends of Storm Events Over Years", x = "Year", y = "Frequency") +
+  theme_minimal() +
+  theme(legend.position = "right")
+```
+
+```{r}
+ggplot(storm_freq_long, aes(x = Year, y = event_type, fill = Frequency)) +
+  geom_tile(color = "white") +
+  scale_fill_gradient(low = "lightblue", high = "darkblue") +
+  labs(title = "Heatmap of Storm Event Frequencies by Year", x = "Year", y = "Event Type") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
+```
+
+```{r
+state_freq_short <- bind_rows(
+  mutate(statefreq_1996, Year = 1996),
+  mutate(statefreq_1997, Year = 1997),
+  mutate(statefreq_1999, Year = 1999),
+  mutate(statefreq_2000, Year = 2000),
+  mutate(statefreq_2001, Year = 2001),
+  mutate(statefreq_2002, Year = 2002),
+  mutate(statefreq_2003, Year = 2003),
+  mutate(statefreq_2004, Year = 2004),
+  mutate(statefreq_2005, Year = 2005),
+  mutate(statefreq_2006, Year = 2006),
+  mutate(statefreq_2007, Year = 2007),
+  mutate(statefreq_2008, Year = 2008),
+  mutate(statefreq_2009, Year = 2009),
+  mutate(statefreq_2010, Year = 2010),
+  mutate(statefreq_2011, Year = 2011),
+  mutate(statefreq_2012, Year = 2012),
+  mutate(statefreq_2013, Year = 2013)
+)
+
+class(state_freq_short) 
+
+head(state_freq_short)
+colnames(state_freq_short)
+```
+
+
+
+```{r}
+#1996
+us_states <- map_data("state")
+
+state_freq_long_96 <- state_freq_long %>%
+  filter(year == 1996) %>%
+  mutate(state = tolower(state))
+
+map_data_1996 <- merge(us_states, state_freq_long_96, by.x = "region", by.y = "state", all.x = TRUE)
+
+ggplot(map_data_1996, aes(long, lat, group = group, fill = Frequency)) +
+  geom_polygon(color = "white") +
+  scale_fill_gradient(low = "lightblue", high = "darkblue", na.value = "grey90") +
+  labs(title = "Choropleth Map of Storm Frequencies by State (1996)", fill = "Frequency") +
+  theme_minimal() +
+  theme(axis.text = element_blank(), axis.ticks = element_blank(), axis.title = element_blank())
+
+
+
+
+#1997
+state_freq_long_97 <- state_freq_long %>%
+  filter(year == 1997) %>%
+  mutate(state = tolower(state))
+
+map_data_1997 <- merge(us_states, state_freq_long_97, by.x = "region", by.y = "state", all.x = TRUE)
+
+ggplot(map_data_1997, aes(long, lat, group = group, fill = Frequency)) +
+  geom_polygon(color = "white") +
+  scale_fill_gradient(low = "lightblue", high = "darkblue", na.value = "grey90") +
+  labs(title = "Choropleth Map of Storm Frequencies by State (1997)", fill = "Frequency") +
+  theme_minimal() +
+  theme(axis.text = element_blank(), axis.ticks = element_blank(), axis.title = element_blank())
+
+
+
+
+#1999
+state_freq_long_99 <- state_freq_long %>%
+  filter(year == 1999) %>%
+  mutate(state = tolower(state))
+
+map_data_1999 <- merge(us_states, state_freq_long_99, by.x = "region", by.y = "state", all.x = TRUE)
+
+ggplot(map_data_1999, aes(long, lat, group = group, fill = Frequency)) +
+  geom_polygon(color = "white") +
+  scale_fill_gradient(low = "lightblue", high = "darkblue", na.value = "grey90") +
+  labs(title = "Choropleth Map of Storm Frequencies by State (1999)", fill = "Frequency") +
+  theme_minimal() +
+  theme(axis.text = element_blank(), axis.ticks = element_blank(), axis.title = element_blank())
+
+
+
+#2000
+state_freq_long_2000 <- state_freq_long %>%
+  filter(year == 2000) %>%
+  mutate(state = tolower(state))
+
+map_data_2000 <- merge(us_states, state_freq_long_2000, by.x = "region", by.y = "state", all.x = TRUE)
+
+ggplot(map_data_2000, aes(long, lat, group = group, fill = Frequency)) +
+  geom_polygon(color = "white") +
+  scale_fill_gradient(low = "lightblue", high = "darkblue", na.value = "grey90") +
+  labs(title = "Choropleth Map of Storm Frequencies by State (2000)", fill = "Frequency") +
+  theme_minimal() +
+  theme(axis.text = element_blank(), axis.ticks = element_blank(), axis.title = element_blank())
+
+
+
+#2001
+state_freq_long_2001 <- state_freq_long %>%
+  filter(year == 2001) %>%
+  mutate(state = tolower(state))
+
+map_data_2001 <- merge(us_states, state_freq_long_2001, by.x = "region", by.y = "state", all.x = TRUE)
+
+ggplot(map_data_2001, aes(long, lat, group = group, fill = Frequency)) +
+  geom_polygon(color = "white") +
+  scale_fill_gradient(low = "lightblue", high = "darkblue", na.value = "grey90") +
+  labs(title = "Choropleth Map of Storm Frequencies by State (2001)", fill = "Frequency") +
+  theme_minimal() +
+  theme(axis.text = element_blank(), axis.ticks = element_blank(), axis.title = element_blank())
+
+
+#2002
+state_freq_long_2002 <- state_freq_long %>%
+  filter(year == 2002) %>%
+  mutate(state = tolower(state))
+
+map_data_2002 <- merge(us_states, state_freq_long_2002, by.x = "region", by.y = "state", all.x = TRUE)
+
+ggplot(map_data_2002, aes(long, lat, group = group, fill = Frequency)) +
+  geom_polygon(color = "white") +
+  scale_fill_gradient(low = "lightblue", high = "darkblue", na.value = "grey90") +
+  labs(title = "Choropleth Map of Storm Frequencies by State (2002)", fill = "Frequency") +
+  theme_minimal() +
+  theme(axis.text = element_blank(), axis.ticks = element_blank(), axis.title = element_blank())
+
+
+
+#2003
+state_freq_long_2003 <- state_freq_long %>%
+  filter(year == 2003) %>%
+  mutate(state = tolower(state))
+
+map_data_2003 <- merge(us_states, state_freq_long_2003, by.x = "region", by.y = "state", all.x = TRUE)
+
+ggplot(map_data_2003, aes(long, lat, group = group, fill = Frequency)) +
+  geom_polygon(color = "white") +
+  scale_fill_gradient(low = "lightblue", high = "darkblue", na.value = "grey90") +
+  labs(title = "Choropleth Map of Storm Frequencies by State (2003)", fill = "Frequency") +
+  theme_minimal() +
+  theme(axis.text = element_blank(), axis.ticks = element_blank(), axis.title = element_blank())
+
+
+
+#2004
+state_freq_long_2004 <- state_freq_long %>%
+  filter(year == 2004) %>%
+  mutate(state = tolower(state))
+
+map_data_2004 <- merge(us_states, state_freq_long_2004, by.x = "region", by.y = "state", all.x = TRUE)
+
+ggplot(map_data_2004, aes(long, lat, group = group, fill = Frequency)) +
+  geom_polygon(color = "white") +
+  scale_fill_gradient(low = "lightblue", high = "darkblue", na.value = "grey90") +
+  labs(title = "Choropleth Map of Storm Frequencies by State (2004)", fill = "Frequency") +
+  theme_minimal() +
+  theme(axis.text = element_blank(), axis.ticks = element_blank(), axis.title = element_blank())
+
+
+
+#2005
+state_freq_long_2005 <- state_freq_long %>%
+  filter(year == 2005) %>%
+  mutate(state = tolower(state))
+
+map_data_2005 <- merge(us_states, state_freq_long_2005, by.x = "region", by.y = "state", all.x = TRUE)
+
+ggplot(map_data_2005, aes(long, lat, group = group, fill = Frequency)) +
+  geom_polygon(color = "white") +
+  scale_fill_gradient(low = "lightblue", high = "darkblue", na.value = "grey90") +
+  labs(title = "Choropleth Map of Storm Frequencies by State (2005)", fill = "Frequency") +
+  theme_minimal() +
+  theme(axis.text = element_blank(), axis.ticks = element_blank(), axis.title = element_blank())
+
+
+
+#2006
+state_freq_long_2006 <- state_freq_long %>%
+  filter(year == 2006) %>%
+  mutate(state = tolower(state))
+
+map_data_2006 <- merge(us_states, state_freq_long_2006, by.x = "region", by.y = "state", all.x = TRUE)
+
+ggplot(map_data_2006, aes(long, lat, group = group, fill = Frequency)) +
+  geom_polygon(color = "white") +
+  scale_fill_gradient(low = "lightblue", high = "darkblue", na.value = "grey90") +
+  labs(title = "Choropleth Map of Storm Frequencies by State (2006)", fill = "Frequency") +
+  theme_minimal() +
+  theme(axis.text = element_blank(), axis.ticks = element_blank(), axis.title = element_blank())
+
+
+#2007
+state_freq_long_2007 <- state_freq_long %>%
+  filter(year == 2007) %>%
+  mutate(state = tolower(state))
+
+map_data_2007 <- merge(us_states, state_freq_long_2007, by.x = "region", by.y = "state", all.x = TRUE)
+
+ggplot(map_data_2007, aes(long, lat, group = group, fill = Frequency)) +
+  geom_polygon(color = "white") +
+  scale_fill_gradient(low = "lightblue", high = "darkblue", na.value = "grey90") +
+  labs(title = "Choropleth Map of Storm Frequencies by State (2007)", fill = "Frequency") +
+  theme_minimal() +
+  theme(axis.text = element_blank(), axis.ticks = element_blank(), axis.title = element_blank())
+
+
+#2008
+state_freq_long_2008 <- state_freq_long %>%
+  filter(year == 2008) %>%
+  mutate(state = tolower(state))
+
+map_data_2008 <- merge(us_states, state_freq_long_2008, by.x = "region", by.y = "state", all.x = TRUE)
+
+ggplot(map_data_2008, aes(long, lat, group = group, fill = Frequency)) +
+  geom_polygon(color = "white") +
+  scale_fill_gradient(low = "lightblue", high = "darkblue", na.value = "grey90") +
+  labs(title = "Choropleth Map of Storm Frequencies by State (2008)", fill = "Frequency") +
+  theme_minimal() +
+  theme(axis.text = element_blank(), axis.ticks = element_blank(), axis.title = element_blank())
+
+#2009
+state_freq_long_2009 <- state_freq_long %>%
+  filter(year == 2009) %>%
+  mutate(state = tolower(state))
+
+map_data_2009 <- merge(us_states, state_freq_long_2009, by.x = "region", by.y = "state", all.x = TRUE)
+
+ggplot(map_data_2009, aes(long, lat, group = group, fill = Frequency)) +
+  geom_polygon(color = "white") +
+  scale_fill_gradient(low = "lightblue", high = "darkblue", na.value = "grey90") +
+  labs(title = "Choropleth Map of Storm Frequencies by State (2009)", fill = "Frequency") +
+  theme_minimal() +
+  theme(axis.text = element_blank(), axis.ticks = element_blank(), axis.title = element_blank())
+
+#2010
+state_freq_long_2010 <- state_freq_long %>%
+  filter(year == 2010) %>%
+  mutate(state = tolower(state))
+
+map_data_2010 <- merge(us_states, state_freq_long_2010, by.x = "region", by.y = "state", all.x = TRUE)
+
+ggplot(map_data_2010, aes(long, lat, group = group, fill = Frequency)) +
+  geom_polygon(color = "white") +
+  scale_fill_gradient(low = "lightblue", high = "darkblue", na.value = "grey90") +
+  labs(title = "Choropleth Map of Storm Frequencies by State (2010)", fill = "Frequency") +
+  theme_minimal() +
+  theme(axis.text = element_blank(), axis.ticks = element_blank(), axis.title = element_blank())
+
+
+#2011
+state_freq_long_2011 <- state_freq_long %>%
+  filter(year == 2011) %>%
+  mutate(state = tolower(state))
+
+map_data_2011 <- merge(us_states, state_freq_long_2011, by.x = "region", by.y = "state", all.x = TRUE)
+
+ggplot(map_data_2011, aes(long, lat, group = group, fill = Frequency)) +
+  geom_polygon(color = "white") +
+  scale_fill_gradient(low = "lightblue", high = "darkblue", na.value = "grey90") +
+  labs(title = "Choropleth Map of Storm Frequencies by State (2011)", fill = "Frequency") +
+  theme_minimal() +
+  theme(axis.text = element_blank(), axis.ticks = element_blank(), axis.title = element_blank())
+
+
+
+#2012
+state_freq_long_2012 <- state_freq_long %>%
+  filter(year == 2010) %>%
+  mutate(state = tolower(state))
+
+map_data_2012 <- merge(us_states, state_freq_long_2012, by.x = "region", by.y = "state", all.x = TRUE)
+
+ggplot(map_data_2012, aes(long, lat, group = group, fill = Frequency)) +
+  geom_polygon(color = "white") +
+  scale_fill_gradient(low = "lightblue", high = "darkblue", na.value = "grey90") +
+  labs(title = "Choropleth Map of Storm Frequencies by State (2012)", fill = "Frequency") +
+  theme_minimal() +
+  theme(axis.text = element_blank(), axis.ticks = element_blank(), axis.title = element_blank())
+
+
+#2013
+state_freq_long_2013 <- state_freq_long %>%
+  filter(year == 2013) %>%
+  mutate(state = tolower(state))
+
+map_data_2013 <- merge(us_states, state_freq_long_2013, by.x = "region", by.y = "state", all.x = TRUE)
+
+ggplot(map_data_2013, aes(long, lat, group = group, fill = Frequency)) +
+  geom_polygon(color = "white") +
+  scale_fill_gradient(low = "lightblue", high = "darkblue", na.value = "grey90") +
+  labs(title = "Choropleth Map of Storm Frequencies by State (2013)", fill = "Frequency") +
+  theme_minimal() +
+  theme(axis.text = element_blank(), axis.ticks = element_blank(), axis.title = element_blank())
+```
+
+```{r}
+state_freq_long <- state_freq %>%
+  pivot_longer(
+    cols = starts_with("freq_"),
+    names_to = "Year",
+    names_prefix = "freq_",
+    values_to = "Frequency"
+  ) %>%
+  mutate(Year = as.integer(Year))
+```
+
+```{r}
+lm_state <- state_freq_long %>%
+  group_by(state) %>%
+  summarize(model = list(lm(Frequency ~ Year, data = pick(everything())))) %>%
+  mutate(tidy = purrr::map(model, broom::tidy)) %>%
+  unnest(tidy)
+
+print(lm_state)
+```
+
+```{r}
+ranked_state <- lm_state %>%
+  filter(term == "Year") %>%
+  arrange(desc(estimate))  
+ranked_state
+```
+
+```{r}
+lmer_storm <- lmer(Frequency ~ Year + (1 | event_type), data = storm_freq_long)
+
+summary(lmer_storm)
+```
+
