@@ -4,7 +4,8 @@
 <br />
 <div align="center">
   <a href="https://github.com/laurenkhoury/amfam">
-    <img src="images/uw_logo.png" alt="logo1" width="50" height="30">
+    <img src="images/uw_logo.png" alt="logo1" width="80" height="50">
+    <img src="images/amfam_logo.png" alt="logo2" width="80" height="50">
   </a>
 
 ## About the Project
