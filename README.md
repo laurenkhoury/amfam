@@ -1,5 +1,12 @@
 # amfam
 
+<!-- PROJECT LOGO -->
+<br />
+<div align="center">
+  <a href="https://github.com/laurenkhoury/amfam">
+    <img src="images/uw_logo.png" alt="logo1" width="50" height="30">
+  </a>
+
 ## About the Project
 
 ## Data
