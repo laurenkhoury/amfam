@@ -3,7 +3,7 @@
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
-  <a href="https://github.com/laurenkhoury/amfam" style="text-decoration: none;">
+  <a href="https://github.com/laurenkhoury/amfam" style="text-decoration: none !important;">
     <img src="images/uw_logo.png" alt="logo1" width="200">
     <img src="images/amfam_logo.png" alt="logo2" width="200">
   </a>
