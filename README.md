@@ -1,9 +1,9 @@
 # amfam
 
-## project
+## About the Project
 
-## data
+## Data
 
-## files
+## Files
 
-- archive/ folder : contains all files from previous repo on this project which can be found here [DSHB-Capstone_AMFAM](https://github.com/lsmithbecker/DSHB-Capstone-AMFAM)
+- archive folder : contains all files from previous repository for this project which can be found here [DSHB-Capstone-AMFAM](https://github.com/lsmithbecker/DSHB-Capstone-AMFAM)
