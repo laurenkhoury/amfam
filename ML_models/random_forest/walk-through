@@ -1,1 +1,144 @@
+# Random Forest Migration Prediction Model Explanation
 
+## Overview
+This R script builds a Random Forest classification model to predict whether individuals will move residence or stay in the same house. The model uses demographic, housing, and hurricane risk data from the American Community Survey (ACS) to make predictions.
+
+## 
+
+### Required R Packages
+```r
+tidyverse
+tidymodels
+recipes
+themis
+vip
+janitor
+here
+doParallel
+yardstick
+devtools
+```
+
+### Required Data
+- Input file: `FL_31_model_data.csv`
+- The data should contain demographic and housing variables from ACS
+
+## Workflow Steps
+
+### 1. Environment Setup
+The script configures parallel processing for faster model training and loads custom machine learning functions from a GitHub repository. It sets up multiple CPU cores for parallel computation. However, it was not used in this version of the document, due to constant changes in model configurations.
+### 2. Data Loading and Preparation
+
+**Data Import:**
+- Reads in `FL_31_model_data.csv`
+- Cleans column names using `janitor::clean_names()`
+
+**Feature Engineering:**
+Creates several derived features:
+- **Migration status**: Converts `migrate1` into factors (same_house, moved_within_state, moved_out_state, abroad)
+- **Demographics**: Factorizes sex, marital status, race, Hispanic origin, education, employment status
+- **Housing metrics**: 
+  - `mortgage_to_income`: Property value to income ratio for owners
+  - `rent_to_income`: Annual rent to income ratio for renters
+- **Family composition**: 
+  - `small_family`: Families with 1 child
+  - `large_family`: Families with 2+ children
+- **Age groups**: 
+  - `young_adult` (18-35)
+  - `mid_age` (35-60)
+  - `senior` (60+)
+- **Risk interactions**:
+  - `hurricane_risk_exposure`: Combined hurricane exposure and high-risk percentage
+  - `young_renter`, `young_high_risk`, `children_in_high_risk`: Interaction terms
+
+### 3. Data Filtering
+- Removes records with `migrate1 = 'abroad'` - this was outside the scope of this current project.
+- Excludes year 2018 data - there were no major hurricanes in Florida that year.
+- Creates binary outcome variable: `moved` (Stayed/Moved) - easier to make a classification model to feed into the GenAgent.
+- Assigns case weights: 10 for "Moved", 1 for "Stayed" to handle class imbalance
+- Takes a random sample of 2,000 observations - for computational cost, once a strong model is created, try on the full dataset.
+
+### 4. Train-Validation-Test Split
+```
+Original data (2000 samples)
+├── 75% Training pool (1500 samples)
+│   ├── 80% Training set (1200 samples)
+│   └── 20% Validation set (300 samples)
+└── 25% Test set (500 samples)
+```
+All splits use stratified sampling on the `moved` variable (seed: 1234) - seed for replicability
+
+### 5. Cross-Validation Setup
+Creates 5-fold cross-validation splits on training data, stratified by `moved` outcome - to resample the data
+
+### 6. Recipe Definition
+**Preprocessing steps** (`rec_binary`):
+1. Remove non-predictive columns: `serial`, `fips`, `migrate1`, `gq`, `n`, `knn_avg_distance`
+2. Impute missing numeric values with median
+3. Impute missing categorical values with mode
+4. Create dummy variables for all nominal predictors
+
+### 7. Initial Simple Model
+Builds a baseline Random Forest with fixed hyperparameters:
+- 500 trees
+- mtry = 10 (features per split)
+- min_n = 5 (minimum node size)
+- Evaluates on test set using accuracy, ROC AUC, sensitivity, specificity
+
+### 8. Hyperparameter Tuning
+
+**Grid Search:**
+- Creates random grid of 20 hyperparameter combinations:
+  - `trees`: 100-1000
+  - `mtry`: 5-30
+  - `min_n`: 5-100
+These were the best hyperparameters after running the model repeatedly to optimize.
+
+**Model Specification:**
+- Uses `ranger` engine with:
+  - Probability predictions enabled
+  - Class weights (10:1 for Moved:Stayed) - this was the best proportion without overfitting
+  - Impurity-based variable importance
+  - Unordered factors treated as ordered
+
+**Tuning Process:**
+- Performs grid search using 5-fold CV
+- Evaluates using: ROC AUC, balanced accuracy, sensitivity, specificity
+- Selects best model based on ROC AUC
+
+### 9. Model Finalization and Evaluation
+
+**Validation Set:**
+- Fits best model on training data with case weights
+- Generates predictions on validation set
+- Calculates performance metrics
+
+**Test Set:**
+- Makes final predictions on held-out test set
+- Reports accuracy, ROC AUC, sensitivity, and specificity
+
+## Key Model Features
+
+**Class Imbalance Handling:**
+- Case weights (10:1 ratio)
+- Class weights in ranger engine
+- Both methods prioritize correct prediction of the minority "Moved" class
+
+**Performance Metrics:**
+- **ROC AUC**: Overall discrimination ability
+- **Accuracy**: Overall correctness
+- **Sensitivity**: True positive rate (detecting movers)
+- **Specificity**: True negative rate (detecting stayers)
+
+## Output
+The script produces:
+1. Validation set metrics
+2. Test set metrics with predictions
+3. Variable importance scores (via impurity)
+4. Trained final model object
+
+## Notes
+- Seed set to 1234 for reproducibility
+- Parallel processing enabled for computational efficiency
+- Event level set to "second" (Moved class) for metric calculation
+- Model optimized for ROC AUC to balance sensitivity and specificity
