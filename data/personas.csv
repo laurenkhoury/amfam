@@ -1,0 +1,81 @@
+county,mode,age,income,home_value,wind_avg,storm_count,education,preparedness,risk_response,kids,employment,status,flood_zone,elevation_diff,flood_depth,construction_year,ownership
+Duval,base,50,33000,290500,70.4,133,"Some college, no degree",Individuals who are Prepared,Likely,1.0,employed,Single,X,,0.0,1986,own
+Duval,max,95,1258000,1327500,160.0,133,Bachelor's degree,Very likely,Very likely,2.0,employed,Married with spouse present,X,,0.0,1986,own
+Duval,min,18,4,199075,25.0,133,"Some college, no degree",Individuals who are Prepared,Likely,0.0,unemployed,Single,X,,0.0,1986,rent
+Duval,random,84,30000,249948,70.0,133,Bachelor's degree,Individuals who are Prepared,Likely,0.0,employed,Single,AE,,,1997,rent
+Duval,random,52,53000,348819,90.0,133,Associate's degree,Individuals who are Prepared,Very likely,2.0,employed,Married with spouse present,AE,,,1997,own
+Broward,base,52,35000,440000,72.8,134,Bachelor's degree,Individuals who are Prepared,Very likely,1.0,employed,Single,AHB,0.0,1.0,1969,own
+Broward,max,95,1514800,1475000,160.0,134,Post graduate work/degree or professional degree,Very likely,Very likely,4.0,employed,Married with spouse present,AHB,3.0,0.0,1980,own
+Broward,min,18,1,250000,25.0,134,Less than high school diploma,Individuals who are Prepared,Unlikely,0.0,unemployed,Single,AHB,3.0,0.0,1980,rent
+Broward,random,70,49400,468736,35.0,134,Bachelor's degree,Individuals who are Prepared,Very likely,0.0,not in labor force,Divorced,AHB,0.0,,1966,own
+Broward,random,50,53100,585875,115.0,134,Bachelor's degree,Individuals with Intent to Prepare,,0.0,employed,Married with spouse present,AHB,3.0,0.0,1980,rent
+Alachua,base,42,29400,325000,70.0,131,High school degree or diploma,Unknown,Likely,0.0,employed,Single,AE,1.0,0.0,2017,own
+Alachua,max,95,981000,1373200,160.0,131,Bachelor's degree,Very likely,Very likely,2.0,employed,Married with spouse present,AOB,1.0,0.0,1919,own
+Alachua,min,18,4,213000,25.0,131,High school degree or diploma,Individuals who are Prepared,Likely,0.0,unemployed,Single,AOB,1.0,0.0,1919,rent
+Alachua,random,61,17000,302054,55.0,131,Associate's degree,Unknown,Very likely,0.0,not in labor force,Single,A10,,1.0,1969,rent
+Alachua,random,36,10000,325492,100.0,131,"Some college, no degree",Individuals who are Prepared,Very likely,0.0,employed,Single,AE,,1.0,1974,own
+St. Johns,base,55,32000,468250,71.1,134,"Some college, no degree",Individuals who are Prepared,Likely,1.0,employed,Married with spouse present,AE,-1.0,2.0,1972,own
+St. Johns,max,95,1479000,1275000,160.0,134,Bachelor's degree,Very likely,Very likely,2.0,employed,Married with spouse present,AE,-1.0,2.0,1972,own
+St. Johns,min,18,1,339675,25.0,134,"Some college, no degree",Individuals who are Prepared,Likely,0.0,unemployed,Single,AE,-1.0,2.0,1972,rent
+St. Johns,random,63,63000,593787,95.0,134,"Some college, no degree",Individuals who are Prepared,Likely,0.0,not in labor force,Married with spouse present,AE,-1.0,2.0,1972,own
+St. Johns,random,44,95000,509050,55.0,134,"Some college, no degree",Individuals who are Prepared,Likely,0.0,employed,Divorced,AE,-1.0,2.0,1972,rent
+Bay,base,53,35000,355000,70.4,119,High school degree or diploma,Individuals who are Prepared,Very likely,1.0,employed,Married with spouse present,AE,,0.0,1943,own
+Bay,max,95,806000,1016550,160.0,119,Bachelor's degree,Very likely,Very likely,2.0,employed,Married with spouse present,AOB,1.0,0.0,1919,own
+Bay,min,18,4,275000,25.0,119,High school degree or diploma,Individuals who are Prepared,Unlikely,0.0,unemployed,Single,AOB,1.0,0.0,1919,rent
+Bay,random,43,50000,418816,50.0,119,High school degree or diploma,Individuals who are Prepared,Very likely,1.0,not in labor force,Widowed,X,,3.0,1976,own
+Bay,random,19,107200,409054,105.0,119,High school degree or diploma,Individuals who are Prepared,Very likely,1.0,not in labor force,Divorced,AE,,,1953,own
+Leon,base,45,33000,288750,70.0,131,Bachelor's degree,Individuals who are Prepared,Very likely,0.0,employed,Single,AOB,1.0,0.0,1919,own
+Leon,max,95,1057200,845000,160.0,131,Post graduate work/degree or professional degree,Very likely,Very likely,5.0,employed,Married with spouse present,AOB,1.0,0.0,1919,own
+Leon,min,18,4,192000,25.0,131,Less than high school diploma,Individuals who are Prepared,Unlikely,0.0,unemployed,Single,AOB,1.0,0.0,1919,rent
+Leon,random,38,30500,352164,55.0,131,Post graduate work/degree or professional degree,Individuals with Intent to Prepare,Very likely,1.0,employed,Married with spouse present,AE,2.0,0.0,1998,own
+Leon,random,43,15000,405846,65.0,131,High school degree or diploma,Individuals who are Prepared,Very likely,0.0,employed,Divorced,AHB,2.0,0.0,2001,rent
+Brevard,base,58,33000,344000,71.8,142,Post graduate work/degree or professional degree,Individuals who are Prepared,Very likely,1.0,employed,Married with spouse present,A,,,1986,own
+Brevard,max,95,1000500,1059500,160.0,142,Post graduate work/degree or professional degree,Very likely,Very likely,6.0,employed,Married with spouse present,A,,,1986,own
+Brevard,min,18,4,261000,25.0,142,Less than high school diploma,Individuals who are Prepared,Unlikely,0.0,unemployed,Single,A,,,1986,rent
+Brevard,random,91,89900,377187,45.0,142,Associate's degree,Individuals who are Prepared,Likely,1.0,not in labor force,Married with spouse present,A,,,1986,own
+Brevard,random,57,77000,420764,60.0,142,Post graduate work/degree or professional degree,Individuals who are Prepared,Very likely,0.0,employed,Single,A,,,1986,own
+Pasco,base,56,30000,327000,70.0,135,Bachelor's degree,Individuals who are Prepared,Likely,0.0,employed,Married with spouse present,AHB,90.0,0.0,1975,own
+Pasco,max,95,1041000,772000,160.0,135,Post graduate work/degree or professional degree,Very likely,Very likely,5.0,employed,Married with spouse present,AOB,1.0,0.0,1919,own
+Pasco,min,18,1,230000,25.0,135,Less than high school diploma,Individuals who are Prepared,Unlikely,0.0,unemployed,Single,AOB,1.0,0.0,1919,rent
+Pasco,random,26,50200,305391,90.0,135,High school degree or diploma,Individuals who are Prepared,Very likely,0.0,not in labor force,Married with spouse present,AE,3.0,,1990,own
+Pasco,random,47,53000,236410,135.0,135,"Some college, no degree",Individuals who are Prepared,Likely,3.0,not in labor force,Married with spouse present,AE,,,1953,own
+Seminole,base,50,36500,400000,71.3,138,"Some college, no degree",Individuals who are Prepared,Very likely,1.0,employed,Married with spouse present,AE,2.0,2.0,1995,own
+Seminole,max,95,1131000,1049610,160.0,138,Post graduate work/degree or professional degree,Very likely,Very likely,2.0,employed,Married with spouse present,AE,2.0,2.0,1995,own
+Seminole,min,18,4,305000,25.0,138,Less than high school diploma,Individuals who are Prepared,Likely,0.0,unemployed,Single,AE,2.0,2.0,1995,rent
+Seminole,random,43,22200,499200,45.0,138,Post graduate work/degree or professional degree,Individuals who are Prepared,Very likely,1.0,not in labor force,Divorced,AE,2.0,2.0,1995,own
+Seminole,random,33,24000,351727,105.0,138,Less than high school diploma,Individuals with Intent to Prepare,Likely,0.0,employed,Single,AE,2.0,2.0,1995,own
+Palm Beach,base,57,36000,461250,72.4,135,Bachelor's degree,Individuals who are Prepared,Very likely,0.0,employed,Married with spouse present,A07,,0.0,1958,own
+Palm Beach,max,95,1479000,2150000,160.0,135,Post graduate work/degree or professional degree,Very likely,Very likely,2.0,employed,Married with spouse present,AOB,1.0,0.0,1919,own
+Palm Beach,min,18,1,279875,25.0,135,High school degree or diploma,Individuals who are Prepared,Unlikely,0.0,unemployed,Single,AOB,1.0,0.0,1919,rent
+Palm Beach,random,21,74400,659345,25.0,135,Associate's degree,Individuals who are Prepared,Very likely,2.0,not in labor force,Married with spouse present,X,2.0,0.0,2001,own
+Palm Beach,random,59,49000,702583,45.0,135,Post graduate work/degree or professional degree,Individuals who are Prepared,Unlikely,0.0,employed,Married with spouse present,X,2.0,0.0,2001,own
+Osceola,base,49,29000,375000,71.6,137,Post graduate work/degree or professional degree,Individuals who are Prepared,Very likely,1.0,employed,Single,AE,,1.0,1948,own
+Osceola,max,95,976000,753899,160.0,137,Post graduate work/degree or professional degree,Very likely,Very likely,6.0,employed,Married with spouse present,AOB,1.0,0.0,1919,own
+Osceola,min,18,4,309250,25.0,137,Less than high school diploma,Individuals who are Prepared,Unlikely,0.0,unemployed,Single,AOB,1.0,0.0,1919,rent
+Osceola,random,85,40000,426548,100.0,137,High school degree or diploma,Individuals who are Prepared,Very likely,0.0,employed,Married with spouse present,A10,,1.0,1969,own
+Osceola,random,69,475000,339574,55.0,137,Post graduate work/degree or professional degree,Individuals who are Prepared,Likely,0.0,unemployed,Separated,AOB,1.0,0.0,1919,own
+Hillsborough,base,49,34000,390050,70.4,136,Bachelor's degree,Individuals who are Prepared,Very likely,0.0,employed,Single,VE,1.0,0.0,1987,own
+Hillsborough,max,95,1471000,1325000,160.0,136,Post graduate work/degree or professional degree,Very likely,Very likely,5.0,employed,Married with spouse present,VE,1.0,0.0,1987,own
+Hillsborough,min,18,1,295523,25.0,136,Less than high school diploma,Individuals who are Prepared,Unlikely,0.0,unemployed,Single,VE,1.0,0.0,1987,rent
+Hillsborough,random,59,63000,381260,60.0,136,"Some college, no degree",Individuals who are Prepared,Likely,3.0,unemployed,Married with spouse present,AE,,0.0,1960,own
+Hillsborough,random,72,145900,395073,75.0,136,Bachelor's degree,Individuals who are Prepared,Very likely,0.0,employed,Married with spouse present,AE,,2.0,1973,own
+Pinellas,base,58,35000,378000,70.8,137,Bachelor's degree,Individuals who are Prepared,Very likely,0.0,employed,Married with spouse present,AE,,1.0,1948,own
+Pinellas,max,95,1248000,1197000,160.0,137,Post graduate work/degree or professional degree,Very likely,Very likely,5.0,employed,Married with spouse present,A12,,0.0,1965,own
+Pinellas,min,18,4,250000,25.0,137,Less than high school diploma,Individuals who are Prepared,Unlikely,0.0,unemployed,Single,A12,,0.0,1965,rent
+Pinellas,random,57,95000,273820,75.0,137,High school degree or diploma,Individuals with Intent to Prepare,Likely,1.0,employed,Divorced,AE,,0.0,1943,own
+Pinellas,random,55,31000,398449,115.0,137,Bachelor's degree,Individuals who are Prepared,Very likely,0.0,not in labor force,Married with spouse present,AE,,1.0,1948,own
+Manatee,base,60,34850,410000,70.6,134,Bachelor's degree,Individuals who are Prepared,Very likely,0.0,not in labor force,Married with spouse present,AE,,1.0,1974,own
+Manatee,max,95,1471000,1424500,160.0,134,Post graduate work/degree or professional degree,Very likely,Very likely,5.0,employed,Married with spouse present,AOB,1.0,0.0,1919,own
+Manatee,min,18,4,309000,25.0,134,Less than high school diploma,Individuals who are Prepared,Unlikely,0.0,unemployed,Single,AOB,1.0,0.0,1919,rent
+Manatee,random,57,1200,479518,60.0,134,Bachelor's degree,Individuals who are Prepared,Unlikely,0.0,employed,Divorced,AE,,99.0,1973,rent
+Manatee,random,76,24000,408992,50.0,134,Associate's degree,Individuals who are Prepared,Very likely,1.0,not in labor force,Single,AE,,1.0,1972,rent
+Sarasota,base,64,35910,389000,71.0,139,"Some college, no degree",Individuals who are Prepared,Likely,0.0,not in labor force,Married with spouse present,AE,,,1969,own
+Sarasota,max,95,1367100,1652000,160.0,139,Bachelor's degree,Very likely,Very likely,1.0,employed,Married with spouse present,X,,0.0,1980,own
+Sarasota,min,18,4,284000,25.0,139,High school degree or diploma,Individuals who are Prepared,Unlikely,0.0,unemployed,Single,X,,0.0,1980,rent
+Sarasota,random,64,48000,348546,45.0,139,"Some college, no degree",Individuals who are Prepared,Very likely,0.0,employed,Divorced,AE,,,1969,own
+Sarasota,random,95,62000,314097,75.0,139,Bachelor's degree,Individuals who are Prepared,Unlikely,0.0,not in labor force,Married with spouse present,X,,0.0,1980,own
+Lee,base,60,34000,350000,71.3,139,High school degree or diploma,Individuals who are Prepared,Very likely,1.0,not in labor force,Married with spouse present,AE,,2.0,1974,own
+Lee,max,95,1064000,1044000,160.0,139,Bachelor's degree,Very likely,Very likely,3.0,employed,Married with spouse present,AE,,0.0,1981,own
+Lee,min,18,4,280000,25.0,139,Less than high school diploma,Individuals who are Prepared,Likely,0.0,unemployed,Single,AE,,0.0,1981,rent
+Lee,random,64,65300,418230,50.0,139,Bachelor's degree,Individuals with Intent to Prepare,Very likely,0.0,not in labor force,Widowed,AE,0.0,19.0,1969,own
+Lee,random,59,50000,282822,60.0,139,High school degree or diploma,Individuals with Intent to Prepare,Very likely,3.0,not in labor force,Married with spouse present,AE,0.0,19.0,1969,own
