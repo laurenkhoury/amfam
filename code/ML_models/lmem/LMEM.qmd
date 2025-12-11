@@ -1,0 +1,436 @@
+---
+title: "influential_factors"
+format: html
+editor_options: 
+  chunk_output_type: console
+---
+
+#Loading Libraries
+```{r}
+options(conflicts.policy = "depends.ok") 
+library(tidyverse)
+library(janitor)
+library(skimr)
+library(broom)
+library(dplyr)
+library(Matrix, exclude = c("expand", "unpack", "pack"))
+library(lme4)
+library(skimr)
+library(effects)
+library(car, exclude = c("recode", "some"))
+library(ordinal, exclude = "slice")
+library(rsample)
+```
+
+```{r}
+# excluding some functions that conflict with tidyverse
+library(car, exclude = c("recode", "some")) 
+theme_set(theme_classic()) 
+
+path_data <- "data"
+```
+
+#Loading in IPUMS Data
+```{r}
+d <- read_csv(here::here(path_data, "FL_IPUMS.csv"),
+              show_col_types = FALSE) |>
+  clean_names() |> 
+  glimpse()
+```
+
+
+#Filtering to Duval County
+```{r}
+filtered_d <- d |> 
+  filter(countyfip == 31)
+```
+
+#Scaling Variables
+```{r}
+filtered_d <- filtered_d |> 
+  mutate(
+    hhincome_c = scale(hhincome, scale = FALSE),
+    age_c      = scale(age, scale = FALSE),
+    valueh_c   = scale(valueh, scale = FALSE),
+    inctot_c   = scale(inctot, scale = FALSE),
+    poverty_c  = scale(poverty, scale = FALSE),
+    pernum_c   = scale(pernum, scale = FALSE),
+    marst_c    = scale(marst, scale = FALSE),
+    educ_c     = scale(educ, scale = FALSE),
+    race_c     = scale(race, scale = FALSE),
+    empstat_c  = scale(empstat, scale = FALSE)
+  )
+
+```
+
+#Testing initial Model
+```{r}
+m1 <- lmer(migrate1 ~ hhincome_c + age_c + valueh_c + inctot_c + poverty_c + pernum_c + marst_c + educ_c + race_c + empstat_c + (1|year) , filtered_d)
+summary(m1)
+```
+
+#Standardizing ranges
+```{r}
+filtered_d <- filtered_d |> 
+  mutate(across(c(hhincome, age, valueh, inctot, poverty, pernum, marst, educ, race, empstat),
+                ~ scale(.x, center = TRUE, scale = TRUE)[,1],
+                .names = "{.col}_z"))
+
+```
+
+#Testing with standardized Predictors
+```{r}
+m2 <- lmer(migrate1 ~ hhincome_z + age_z + valueh_z + inctot_z + poverty_z + pernum_z + marst_z + educ_z + race_z + empstat_z + (1|year) , filtered_d)
+summary(m2)
+```
+
+#Loading in Duval only Dataset
+```{r}
+d31 <- read_csv(here::here(path_data, "FL_31_model_data.csv"),
+              show_col_types = FALSE) |>
+  clean_names() |> 
+  glimpse()
+```
+
+
+#Scaling Continuous Variables
+```{r}
+# Columns to scale
+continuous_vars <- c(
+  "hhincome", "inctot", "valueh", "num_declarations",
+  "outflow_returns", "inflow_returns", "net_migration_returns",
+  "outflow_people", "inflow_people", "net_migration_people",
+  "outflow_agi", "inflow_agi",
+  "max_wind_speed", "hurricane_exp_percent", "high_risk_percent",
+  "well_prepared_percent", "age_mapped", "income_mapped_k",
+  "risk_perception", "hurricane_experience",
+  "preparedness_level", "conf_level", "knn_avg_distance", "age"
+)
+
+# Center and scale those columns only
+d_scaled <- d31 %>%
+  mutate(across(all_of(continuous_vars), 
+                ~ as.numeric(scale(.x, center = TRUE, scale = TRUE)),
+                .names = "{.col}_z"))
+
+d_scaled_dich <- d_scaled |> 
+  filter(migrate1 != 4)
+
+d_scaled_dich <- d_scaled_dich |> 
+  mutate(migrate_binary = if_else(migrate1 %in% c(2, 3), 1, 0))
+```
+
+#Running More model predictors
+```{r}
+m3 <- lmer(migrate1 ~ hhincome_z + age_z + valueh_z + inctot_z + (1|year) , d_scaled)
+summary(m3)
+```
+
+#Running Ordinal Mixed Regression
+```{r}
+m_ord <- clmm(as.factor(migrate1) ~ 
+                age_mapped_z + income_mapped_k_z + owns_home +
+                risk_perception_z + hurricane_experience_z +
+                preparedness_level_z + conf_level_z +
+                max_wind_speed_z + high_risk_percent_z +
+                (1 | year),
+              data = d_scaled)
+
+summary(m_ord)
+```
+
+#Loading in Data again on accident
+
+data_all <- read_csv(here::here(path_data, "FL_31_model_data.csv"),
+              show_col_types = FALSE) |>
+  clean_names() |> 
+  glimpse()
+
+
+#Running More models and testing R-squared
+```{r}
+m4 <- glmer(migrate_binary ~ hhincome_z + age_z + valueh_z + inctot_z + (1|year) , d_scaled_dich, family = binomial())
+m4_no_hhincome <- glmer(migrate_binary ~ age_z + valueh_z + inctot_z + (1 | year),
+                        data = d_scaled_dich,
+                        family = binomial())
+
+m4_no_age <- glmer(migrate_binary ~ hhincome_z + valueh_z + inctot_z + (1 | year),
+                   data = d_scaled_dich,
+                   family = binomial())
+
+m4_no_valueh <- glmer(migrate_binary ~ hhincome_z + age_z + inctot_z + (1 | year),
+                      data = d_scaled_dich,
+                      family = binomial())
+
+m4_no_inctot <- glmer(migrate_binary ~ hhincome_z + age_z + valueh_z + (1 | year),
+                      data = d_scaled_dich,
+                      family = binomial())
+anova(m4_no_hhincome, m4)
+anova(m4_no_age, m4)
+anova(m4_no_valueh, m4)
+anova(m4_no_inctot, m4)
+summary(m4)
+```
+
+
+
+Year had such a negligable effect my estimates couldn't run the parameters properly
+m_ord_test <- clmm(as.factor(migrate1) ~ 
+                age_mapped_z + income_mapped_k_z + owns_home +
+                risk_perception_z + hurricane_experience_z +
+                preparedness_level_z + conf_level_z +
+                max_wind_speed_z + high_risk_percent_z +
+                (1 | year),
+              data = d_scaled_test)
+
+summary(m_ord_test)
+
+#Loading in Functions
+```{r}
+pre <- function(compact, augmented) {
+  sse_c <- sse(compact)
+  sse_a <- sse(augmented)
+  (sse_c - sse_a)/sse_c
+}
+
+#Delta R Squared
+delta_r2 <- function(mean, compact, augmented) {
+  sse_m <- sse(mean)
+  sse_c <- sse(compact)
+  sse_a <- sse(augmented)
+  (sse_c - sse_a)/sse_m
+}
+```
+
+
+
+#More models
+```{r}
+d_scaled_dich <- d_scaled_dich %>%
+  mutate(across(c(nchild, age, valueh, risk_perception, 
+                  hurricane_experience, preparedness_level, 
+                  conf_level, num_declarations, net_migration_people, 
+                  max_wind_speed), scale))
+
+```
+
+#Last model running on Duval
+```{r}
+m_final <- glmer(migrate_binary ~ nchild + age + hispan + race + educ + empstat +
+                   ownershp + is_renter + valueh + marst +
+                   risk_perception + hurricane_experience + preparedness_level + conf_level +
+                   num_declarations + net_migration_people + max_wind_speed +
+                   (1 | year),
+                 data = d_scaled_dich,
+                 family = binomial())
+
+```
+
+#Final stats
+```{r}
+summary(m_final)
+performance::check_model(m_final)
+```
+
+#Testing an interactive model
+```{r}
+m_final_interact <- glmer(
+  migrate_binary ~ 
+    nchild + age + hispan + race + educ + empstat +
+    ownershp + is_renter + valueh + marst +
+    risk_perception * hurricane_experience +
+    risk_perception * preparedness_level +
+    risk_perception * conf_level +
+    ownershp * risk_perception +
+    age * risk_perception +
+    num_declarations * risk_perception +
+    max_wind_speed * net_migration_people +
+    (1 | year),
+  data = d_scaled_dich,
+  family = binomial()
+)
+
+
+anova(m_final, m_final_interact, test = "Chisq")
+summary(m_final_interact)
+```
+
+#Reducing final model for time
+```{r}
+m_final_reduced <- glmer(migrate_binary ~ nchild + age + hispan +  educ +
+                  valueh + max_wind_speed +
+                   (1 | year),
+                 data = d_scaled_dich,
+                 family = binomial())
+anova(m_final_reduced, m_final, test = "Chisq")
+summary(m_final_reduced)
+```
+
+#Loading in Lee County
+```{r}
+data_71 <- read_csv(here::here(path_data, "FL_71_data.csv"),
+              show_col_types = FALSE) |>
+  clean_names() |> 
+  glimpse()
+```
+
+#Scaling variables for Lee
+```{r}
+# Columns to scale
+continuous_vars <- c(
+  "hhincome", "inctot", "valueh", "num_declarations",
+  "outflow_returns", "inflow_returns", "net_migration_returns",
+  "outflow_people", "inflow_people", "net_migration_people",
+  "outflow_agi", "inflow_agi",
+  "max_wind_speed", "hurricane_exp_percent", "high_risk_percent",
+  "well_prepared_percent", "age_mapped", "income_mapped_k",
+  "risk_perception", "hurricane_experience",
+  "preparedness_level", "conf_level", "knn_avg_distance", "age"
+)
+
+# Center and scale those columns only
+d_scaled_71 <- data_71 %>%
+  mutate(across(all_of(continuous_vars), 
+                ~ as.numeric(scale(.x, center = TRUE, scale = TRUE)),
+                .names = "{.col}_z"))
+
+d_scaled_dich_71 <- d_scaled_71 |> 
+  filter(migrate1 != 4)
+
+d_scaled_dich_71 <- d_scaled_dich_71 |> 
+  mutate(migrate_binary = if_else(migrate1 %in% c(2, 3), 1, 0))
+```
+
+#Running model on Lee County
+```{r}
+m4_71 <- glmer(migrate_binary ~ hhincome_z + age_z + valueh_z + inctot_z + (1|year) , d_scaled_dich_71, family = binomial())
+m4_no_hhincome_71 <- glmer(migrate_binary ~ age_z + valueh_z + inctot_z + (1 | year),
+                        data = d_scaled_dich_71,
+                        family = binomial())
+
+m4_no_age_71 <- glmer(migrate_binary ~ hhincome_z + valueh_z + inctot_z + (1 | year),
+                   data = d_scaled_dich_71,
+                   family = binomial())
+
+m4_no_valueh_71 <- glmer(migrate_binary ~ hhincome_z + age_z + inctot_z + (1 | year),
+                      data = d_scaled_dich_71,
+                      family = binomial())
+
+m4_no_inctot_71 <- glmer(migrate_binary ~ hhincome_z + age_z + valueh_z + (1 | year),
+                      data = d_scaled_dich_71,
+                      family = binomial())
+anova(m4_no_hhincome_71, m4_71)
+anova(m4_no_age_71, m4_71)
+anova(m4_no_valueh_71, m4_71)
+anova(m4_no_inctot_71, m4_71)
+summary(m4_71)
+```
+
+#Another model
+```{r}
+m_glmer_bin_71 <- glmer(
+  migrate_binary ~ age_mapped_z + income_mapped_k_z + owns_home +
+    risk_perception_z + hurricane_experience_z +
+    preparedness_level_z + conf_level_z +
+    max_wind_speed_z + educ_z + marst_z + race_z +
+    (1 | year),
+  data = d_scaled_dich_71,
+  family = binomial(link = "logit")
+)
+
+summary(m_glmer_bin_71)
+
+```
+
+#Reading in Hillsborough County
+```{r}
+data_57 <- read_csv(here::here(path_data, "FL_57_data.csv"),
+              show_col_types = FALSE) |>
+  clean_names() |> 
+  glimpse()
+```
+
+#Scaling
+```{r}
+# Columns to scale
+continuous_vars <- c(
+  "hhincome", "inctot", "valueh", "num_declarations",
+  "outflow_returns", "inflow_returns", "net_migration_returns",
+  "outflow_people", "inflow_people", "net_migration_people",
+  "outflow_agi", "inflow_agi",
+  "max_wind_speed", "age_mapped", "income_mapped_k",
+  "risk_perception", "hurricane_experience",
+  "preparedness_level", "conf_level", "knn_avg_distance", "age", "educ", "race", "marst"
+)
+
+# Center and scale those columns only
+d_scaled_57 <- data_57 %>%
+  mutate(across(all_of(continuous_vars), 
+                ~ as.numeric(scale(.x, center = TRUE, scale = TRUE)),
+                .names = "{.col}_z"))
+
+d_scaled_dich_57 <- d_scaled_57 |> 
+  filter(migrate1 != 4)
+
+d_scaled_dich_57 <- d_scaled_dich_57 |> 
+  mutate(migrate_binary = if_else(migrate1 %in% c(2, 3), 1, 0))
+```
+
+#Models and R-Squared
+```{r}
+m4_57 <- glmer(migrate_binary ~ hhincome_z + age_z + valueh_z + inctot_z + (1|year) , d_scaled_dich_57, family = binomial())
+m4_no_hhincome_57 <- glmer(migrate_binary ~ age_z + valueh_z + inctot_z + (1 | year),
+                        data = d_scaled_dich_57,
+                        family = binomial())
+
+m4_no_age_57 <- glmer(migrate_binary ~ hhincome_z + valueh_z + inctot_z + (1 | year),
+                   data = d_scaled_dich_57,
+                   family = binomial())
+
+m4_no_valueh_57 <- glmer(migrate_binary ~ hhincome_z + age_z + inctot_z + (1 | year),
+                      data = d_scaled_dich_57,
+                      family = binomial())
+
+m4_no_inctot_57 <- glmer(migrate_binary ~ hhincome_z + age_z + valueh_z + (1 | year),
+                      data = d_scaled_dich_57,
+                      family = binomial())
+anova(m4_no_hhincome_57, m4_57)
+anova(m4_no_age_57, m4_57)
+anova(m4_no_valueh_57, m4_57)
+anova(m4_no_inctot_57, m4_57)
+summary(m4_57)
+```
+
+#Final Hillsborough Model
+```{r}
+m_glmer_bin_57 <- glmer(
+  migrate_binary ~ age_mapped_z + income_mapped_k_z + owns_home +
+    risk_perception_z + hurricane_experience_z +
+    preparedness_level_z + conf_level_z +
+    max_wind_speed_z + educ_z + marst_z + race_z +
+    (1 | year),
+  data = d_scaled_dich_57,
+  family = binomial(link = "logit")
+)
+
+summary(m_glmer_bin_57)
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
