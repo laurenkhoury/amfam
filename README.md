@@ -9,7 +9,7 @@
 ## About the Project
 
 Welcome to our Capstone project for our Master's program in Data Science in Human Behavior (DSHB)!
-In this project, under the guidance of collaborators at American Family Insurance, we aim to study human migration patterns from hurricane-prone areas by employing the concept of digital twins. We collect data from multiple public sources to create personas which are then used to build generative agents. We run machine learning models with ground-truth migration data to extract feature importances. We interact with the agents via an LLM and run prompt engineering to refine the prompt sent to the LLM to ensure consistency in responses.  
+In this project, under the guidance of collaborators at American Family Insurance, we aim to study human migration patterns from hurricane-prone areas by employing the concept of digital twins. We collect data from multiple public sources to create personas which are then used to build generative agents. We run machine learning models with ground-truth migration data to extract feature importances. We interact with the agents via an LLM and run prompt engineering to refine the prompt sent to the LLM to ensure consistency in responses. We follow the generative agent framework detailed in this repository: https://github.com/StanfordHCI/genagents   
 
 ## Files
 
@@ -30,7 +30,7 @@ In this project, under the guidance of collaborators at American Family Insuranc
   - contains public datasets used to build personas along with a data dictionary
   - contains the final persona file with 80 rows of example personas
  
-## About the Authors
+## Authors
 
 - David Jolly
 - Lauren Khoury
