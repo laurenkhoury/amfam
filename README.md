@@ -28,6 +28,7 @@ In this project, under the guidance of collaborators at American Family Insuranc
      
 - `data`
   - contains public datasets used to build personas along with a data dictionary
+  - contains a doc ("datasets") with links and directions to public datasets 
   - contains the final persona file with 80 rows of example personas
  
 ## Authors
