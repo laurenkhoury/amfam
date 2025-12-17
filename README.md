@@ -31,6 +31,9 @@ In this project, under the guidance of collaborators at American Family Insuranc
   - contains a doc ("datasets") with links and directions to public datasets 
   - contains the final persona file with 80 rows of example personas
  
+- `papers`
+  - contains papers that helped motivate this work
+ 
 ## Authors
 
 - David Jolly
